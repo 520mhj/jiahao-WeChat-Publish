@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二千年间 - 创作助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        body { font-family: 'Noto Serif SC', serif; }
+        .preview-container #MdWechat { all: initial; font-family: inherit; }
+    </style>
+</head>
+<body class="bg-[#faf8f5] min-h-screen text-[#333]">
+    <div class="max-w-6xl mx-auto px-6 py-10">
+        <header class="flex justify-between items-center mb-10 border-b border-stone-200 pb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-stone-800 tracking-wider">二千年间</h1>
+                <p class="text-sm text-stone-500 mt-1">WeChat Article Publishing System</p>
+            </div>
+            <div class="flex gap-4">
+                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-64">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[70vh]">
+            <div class="flex flex-col gap-4">
+                <label class="text-xs uppercase tracking-widest text-stone-400 font-bold">Markdown 文本</label>
+                <textarea id="inputText" class="flex-1 p-6 bg-white border border-stone-200 rounded-xl shadow-sm focus:outline-none focus:border-stone-400 leading-relaxed resize-none" placeholder="在此输入正文..."></textarea>
+                <button onclick="handleConvert()" class="bg-stone-800 text-stone-100 py-3 rounded-xl hover:bg-stone-700 transition-all font-bold tracking-widest">
+                    点击转换 HTML
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <label class="text-xs uppercase tracking-widest text-stone-400 font-bold">微信预览回显</label>
+                <div id="previewArea" class="flex-1 bg-white border border-stone-200 rounded-xl shadow-sm overflow-y-auto p-4 preview-container">
+                    <div class="text-stone-300 italic text-center mt-20">转换后的内容将在此渲染</div>
+                </div>
+                <button id="uploadBtn" onclick="handleUpload()" disabled class="bg-emerald-700 text-white py-3 rounded-xl hover:bg-emerald-800 disabled:bg-stone-200 disabled:text-stone-400 transition-all font-bold tracking-widest">
+                    发送至公众号草稿箱
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentHtml = "";
+
+        async function handleConvert() {
+            const text = document.getElementById('inputText').value;
+            if(!text) return alert("内容不能为空");
+            
+            const res = await fetch('/api/convert', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+            currentHtml = data.html;
+            
+            // 将转换后的 HTML 注入预览区
+            const preview = document.getElementById('previewArea');
+            preview.innerHTML = currentHtml;
+            document.getElementById('uploadBtn').disabled = false;
+        }
+
+        async function handleUpload() {
+            const title = document.getElementById('articleTitle').value;
+            if(!title) return alert("请先输入文章标题");
+            
+            const btn = document.getElementById('uploadBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "正在同步至微信...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ html: currentHtml, title })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    alert("同步成功！请前往公众号后台查看。");
+                } else {
+                    alert("同步失败: " + result.error);
+                }
+            } catch (e) {
+                alert("请求出错: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
