@@ -30,8 +30,8 @@ export async function onRequestPost(context) {
                 digest: "由二千年间创作助手生成",
                 show_cover_pic: 0,
                 need_open_comment: NEED_OPEN_COMMENT,
-                only_fans_can_comment: 0
-				thumb_media_id: Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh,
+                only_fans_can_comment: 0,
+				thumb_media_id: "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh",
             }]
         };
 
