@@ -1,0 +1,7 @@
+{
+  "name": "wechat-publish-tool",
+  "version": "1.0.0",
+  "dependencies": {
+    "marked": "^4.0.0"
+  }
+}
