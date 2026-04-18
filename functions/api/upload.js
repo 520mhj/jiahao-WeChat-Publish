@@ -29,7 +29,8 @@ export async function onRequestPost(context) {
                 digest: "由转换助手同步",
                 show_cover_pic: 0,
                 need_open_comment: 1, // 默认开启留言
-                only_fans_can_comment: 0
+                only_fans_can_comment: 0,
+                WECHAT_DEFAULT_THUMB_MEDIA_ID: "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh"
             }]
         };
 
