@@ -18,6 +18,19 @@
                 <h1 class="text-2xl font-bold text-stone-800 tracking-wider">二千年间</h1>
                 <p class="text-sm text-stone-500 mt-1">WeChat Article Publishing System</p>
             </div>
+            <div class="flex gap-4 items-center">
+                <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">主题:</label>
+                <select id="themeSelect" onchange="handleConvert()" class="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer">
+                    <option value="default">典雅紫 (Default)</option>
+                    <option value="apple">极简科技 (Apple)</option>
+                    <option value="notion">优雅手帐 (Notion)</option>
+                    <option value="vibrant">炫彩现代 (Vibrant)</option>
+                    <option value="blue">学术科技 (Blue)</option>
+                    <option value="green">清新森林 (Green)</option>
+                    <option value="dark">静谧深蓝 (Dark)</option>
+                </select>
+    <input id="articleTitle" type="text" placeholder="文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-48">
+</div>
             <div class="flex gap-4">
                 <input id="articleTitle" type="text" placeholder="输入文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-64">
             </div>
@@ -93,6 +106,30 @@
                 btn.disabled = false;
             }
         }
+
+        // 监听输入框变化也能即时转换（可选）
+    async function handleConvert() {
+        const text = document.getElementById('inputText').value;
+        const theme = document.getElementById('themeSelect').value;
+        if(!text) return;
+        
+        const res = await fetch('/api/convert', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ text, theme })
+        });
+        const data = await res.json();
+        currentHtml = data.html;
+        
+        const preview = document.getElementById('previewArea');
+        preview.innerHTML = currentHtml;
+        // 同步预览区域的背景色，让预览更真实
+        const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
+        const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
+        if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
+        
+        document.getElementById('uploadBtn').disabled = false;
+    }
     </script>
 </body>
 </html>
