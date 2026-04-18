@@ -77,7 +77,10 @@ export async function onRequestPost(context) {
         // 2. 转换 Markdown
         let html = marked.parse(text);
 
-        // 3. 注入行内样式 (模拟 Juice)
+        // 3. 移除正文开头的第一个 H1 标签，避免与微信文章标题重复
+        html = html.replace(/^\s*<h1\b[^>]*>.*?<\/h1>/is, '');
+
+        // 4. 注入行内样式 (模拟 Juice)
         html = html.replace(/<h2/g, `<h2 style="${config.h2}"`);
         html = html.replace(/<p/g, `<p style="${config.p}"`);
         html = html.replace(/<strong/g, `<strong style="${config.strong}"`);
