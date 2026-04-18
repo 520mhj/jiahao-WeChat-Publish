@@ -2,39 +2,40 @@ export async function onRequestPost(context) {
     const { env } = context;
     const { html, title } = await context.request.json();
 
-    // 关键：确保你在 Cloudflare Dashboard 的 Settings -> Functions 中配置了这些变量
     const APP_ID = env.WECHAT_APP_ID;
     const APP_SECRET = env.WECHAT_APP_SECRET;
-    const DEFAULT_AUTHOR = env.WECHAT_DEFAULT_AUTHOR || "纸页虾";
+    const AUTHOR = env.WECHAT_DEFAULT_AUTHOR || "纸页虾";
+    const THUMB_ID = env.WECHAT_DEFAULT_THUMB_MEDIA_ID || "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh"; // 必须在 Cloudflare 后台设置此变量
 
     try {
-        // 1. 获取 Access Token
-        const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APP_ID}&secret=${APP_SECRET}`;
-        const tokenRes = await fetch(tokenUrl);
+        // 1. 获取 Token
+        const tokenRes = await fetch(`https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APP_ID}&secret=${APP_SECRET}`);
         const tokenData = await tokenRes.json();
-
+        
         if (!tokenData.access_token) {
-            // 返回具体的微信错误信息，方便排查 (如 IP 不在白名单会显示 errcode: 40164)
-            return new Response(JSON.stringify({ success: false, error: `微信接口错误: ${tokenData.errmsg || 'Token获取失败'}` }), { status: 500 });
+            return new Response(JSON.stringify({ success: false, error: `Token获取失败: ${tokenData.errmsg}` }), { status: 500 });
         }
 
-        const accessToken = tokenData.access_token;
+        // 2. 检查封面图 ID
+        if (!THUMB_ID) {
+            return new Response(JSON.stringify({ success: false, error: "未设置 WECHAT_DEFAULT_THUMB_MEDIA_ID。微信草稿必须要有封面图 ID。" }), { status: 400 });
+        }
 
-        // 2. 上传草稿
+        // 3. 构建上传载荷
         const draftPayload = {
             articles: [{
-                title: title,
-                author: DEFAULT_AUTHOR,
+                title: title || "新文章",
+                author: AUTHOR,
                 content: html,
-                digest: "由转换助手同步",
+                digest: "同步自二千年间助手",
                 show_cover_pic: 0,
-                need_open_comment: 1, // 默认开启留言
-                only_fans_can_comment: 0,
-                WECHAT_DEFAULT_THUMB_MEDIA_ID: "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh"
+                thumb_media_id: THUMB_ID, // 修复 invalid media_id 报错的关键
+                need_open_comment: 1,      // 默认内置为 1
+                only_fans_can_comment: 0
             }]
         };
 
-        const uploadRes = await fetch(`https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`, {
+        const uploadRes = await fetch(`https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${tokenData.access_token}`, {
             method: 'POST',
             body: JSON.stringify(draftPayload)
         });
@@ -43,9 +44,8 @@ export async function onRequestPost(context) {
         if (uploadData.media_id) {
             return new Response(JSON.stringify({ success: true, media_id: uploadData.media_id }));
         } else {
-            return new Response(JSON.stringify({ success: false, error: uploadData.errmsg }), { status: 400 });
+            return new Response(JSON.stringify({ success: false, error: `微信端报错: ${uploadData.errmsg}` }), { status: 400 });
         }
-
     } catch (err) {
         return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
     }
