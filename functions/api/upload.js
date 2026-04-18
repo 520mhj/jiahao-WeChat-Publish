@@ -2,42 +2,38 @@ export async function onRequestPost(context) {
     const { env } = context;
     const { html, title } = await context.request.json();
 
-    // 从环境变量获取配置
+    // 关键：确保你在 Cloudflare Dashboard 的 Settings -> Functions 中配置了这些变量
     const APP_ID = env.WECHAT_APP_ID;
     const APP_SECRET = env.WECHAT_APP_SECRET;
-    const DEFAULT_AUTHOR = env.WECHAT_DEFAULT_AUTHOR || "二千年间";
-    const NEED_OPEN_COMMENT = 1; // 强制内置为 1
+    const DEFAULT_AUTHOR = env.WECHAT_DEFAULT_AUTHOR || "纸页虾";
 
     try {
         // 1. 获取 Access Token
         const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APP_ID}&secret=${APP_SECRET}`;
         const tokenRes = await fetch(tokenUrl);
         const tokenData = await tokenRes.json();
-        
+
         if (!tokenData.access_token) {
-            return new Response(JSON.stringify({ success: false, error: "Access Token 获取失败" }), { status: 500 });
+            // 返回具体的微信错误信息，方便排查 (如 IP 不在白名单会显示 errcode: 40164)
+            return new Response(JSON.stringify({ success: false, error: `微信接口错误: ${tokenData.errmsg || 'Token获取失败'}` }), { status: 500 });
         }
 
         const accessToken = tokenData.access_token;
 
-        // 2. 构造草稿数据
-        // 根据 wechat_draft.js 的逻辑，这里需要包含 title, author, content 等
+        // 2. 上传草稿
         const draftPayload = {
             articles: [{
                 title: title,
                 author: DEFAULT_AUTHOR,
                 content: html,
-                digest: "由二千年间创作助手生成",
+                digest: "由转换助手同步",
                 show_cover_pic: 0,
-                need_open_comment: NEED_OPEN_COMMENT,
-                only_fans_can_comment: 0,
-				thumb_media_id: "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh",
+                need_open_comment: 1, // 默认开启留言
+                only_fans_can_comment: 0
             }]
         };
 
-        // 3. 调用微信上传接口
-        const uploadUrl = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`;
-        const uploadRes = await fetch(uploadUrl, {
+        const uploadRes = await fetch(`https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`, {
             method: 'POST',
             body: JSON.stringify(draftPayload)
         });
