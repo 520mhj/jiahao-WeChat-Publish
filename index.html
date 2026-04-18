@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>二千年间 - 创作助手</title>
+    <title>微信文章 - 创作助手</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
@@ -15,8 +15,8 @@
     <div class="max-w-6xl mx-auto px-6 py-10">
         <header class="flex justify-between items-center mb-10 border-b border-stone-200 pb-6">
             <div>
-                <h1 class="text-2xl font-bold text-stone-800 tracking-wider">二千年间</h1>
-                <p class="text-sm text-stone-500 mt-1">WeChat Article Publishing System</p>
+                <h1 class="text-2xl font-bold text-stone-800 tracking-wider">发布精灵</h1>
+                <p class="text-sm text-stone-500 mt-1">微信文章发布系统</p>
             </div>
             <div class="flex gap-4 items-center">
                 <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">主题:</label>
@@ -53,6 +53,13 @@
                     发送至公众号草稿箱
                 </button>
             </div>
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+                class="fixed bottom-8 right-8 bg-white border border-stone-200 p-3 rounded-full shadow-lg hover:bg-stone-50 transition-all z-50 group"
+                title="返回顶部">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-500 group-hover:text-stone-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -60,8 +67,22 @@
         let currentHtml = "";
 
         async function handleConvert() {
-            const text = document.getElementById('inputText').value;
-            if(!text) return alert("内容不能为空");
+            const fullText = document.getElementById('inputText').value;
+            if(!fullText) return alert("内容不能为空");
+
+            // 1. 提取并清洗标题 [自定义需求]
+            const lines = fullText.split('\n');
+            let firstLine = lines[0].trim();
+        
+            // 去掉 Markdown 加粗符号 (** 或 __)
+            let cleanTitle = firstLine.replace(/\*\*|__/g, '');
+        
+            // 去掉所有 Emoji 表情 (微信标题不支持)
+            // 使用 Unicode 属性转义匹配各种表情符号
+            cleanTitle = cleanTitle.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F018}-\u{1F093}\u{1F191}-\u{1F251}\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{231A}-\u{231B}\u{2328}\u{23CF}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{24C2}\u{25AA}-\u{25AB}\u{25B6}\u{25C0}\u{25FB}-\u{25FE}\u{2600}-\u{2604}\u{260E}\u{2611}\u{2614}-\u{2615}\u{2618}\u{261D}\u{2620}\u{2622}-\u{2623}\u{2626}\u{262A}\u{262E}-\u{262F}\u{2638}-\u{263A}\u{2640}\u{2642}\u{2648}-\u{2653}\u{2660}\u{2663}\u{2665}-\u{2666}\u{2668}\u{267B}\u{267F}\u{2692}-\u{2697}\u{2699}\u{269B}-\u{269C}\u{26A0}-\u{26A1}\u{26AA}-\u{26AB}\u{26B0}-\u{26B1}\u{26BD}-\u{26BE}\u{26C4}-\u{26C5}\u{26C8}\u{26CE}-\u{26CF}\u{26D1}\u{26D3}-\u{26D4}\u{26E9}-\u{26EA}\u{26F0}-\u{26F5}\u{26F7}-\u{26FA}\u{2702}\u{2705}\u{2708}-\u{270D}\u{270F}\u{2712}\u{2714}\u{2716}\u{271D}\u{2721}\u{2728}\u{2733}-\u{2734}\u{2744}\u{2747}\u{274C}\u{274E}\u{2753}-\u{2755}\u{2757}\u{2763}-\u{2764}\u{2795}-\u{2797}\u{27A1}\u{27B0}\u{27BF}\u{2934}-\u{2935}\u{2B05}-\u{2B07}\u{2B1B}-\u{2B1C}\u{2B50}\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}]/gu, '');
+
+            // 填充到标题输入框
+            document.getElementById('articleTitle').value = cleanTitle.trim();
             
             const res = await fetch('/api/convert', {
                 method: 'POST',
@@ -126,7 +147,9 @@
         const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
         const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
         if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
-        
+
+        // 自动滚动到预览区域顶部，方便查看
+        preview.scrollTop = 0;
         document.getElementById('uploadBtn').disabled = false;
     }
     </script>
