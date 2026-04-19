@@ -71,16 +71,20 @@ export async function onRequestPost(context) {
         let { text, theme } = await context.request.json();
         const config = THEMES[theme] || THEMES.default;
 
-        // 1. 文本替换：我是纸页虾！
+        // 1. 文本清洗与替换 [自定义需求]
+        // 移除所有方括号及其内容，如 或 
+        text = text.replace(/\[.*?\]/g, "");
+
+        // 2. 文本替换：我是纸页虾！
         text = text.replace(/我是你们的“PDF每日学习大师”！/g, "我是纸页虾！");
 
-        // 2. 转换 Markdown
+        // 3. 转换 Markdown
         let html = marked.parse(text);
 
-        // 3. 移除正文开头的第一个 H1 标签，避免与微信文章标题重复
-        html = html.replace(/^\s*<h1\b[^>]*>.*?<\/h1>/is, '');
+        // 4. 移除正文开头的第一个 H1 标签，避免与微信文章标题重复
+        //html = html.replace(/^\s*<h1\b[^>]*>.*?<\/h1>/is, '');
 
-        // 4. 注入行内样式 (模拟 Juice)
+        // 5. 注入行内样式 (模拟 Juice)
         html = html.replace(/<h2/g, `<h2 style="${config.h2}"`);
         html = html.replace(/<p/g, `<p style="${config.p}"`);
         html = html.replace(/<strong/g, `<strong style="${config.strong}"`);
