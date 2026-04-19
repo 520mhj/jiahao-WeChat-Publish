@@ -177,7 +177,6 @@ export async function onRequestPost(context) {
         // 2. 文本清洗与替换
         text = text.replace(/\[cite_start\]/g, "");
         text = text.replace(/\[cite:\]/g, "");
-        text = text.replace(/\/g, "");
         text = text.replace(/^\d+\.\s*$/gm, "");
 
         // 3. 转换 Markdown
