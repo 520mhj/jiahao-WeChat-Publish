@@ -178,27 +178,26 @@ export async function onRequestPost(context) {
         // --- 2. 文本清洗与精准替换 ---
         text = text.replace(/\[cite_start\]/g, "");
         // 精准匹配 并清除，防语法报错的终极写法
-        text = text.replace(/\]*\]/g, "");
-        
-        // 扫尾工作：清理被删空后遗留的无用数字序列 (如: "1. ")
-        text = text.replace(/^[ \t]*\d+\.[ \t]*$/gm, "");
-        text = text.replace(/^[ \t]*[-*+][ \t]*$/gm, "");
-
-        // 文本替换需求
-        text = text.replace(/我是你们的“PDF每日学习大师”！/g, "我是纸页虾！");
+        text = text.replace(/\[cite.*\]/g, "");
 
         // --- 3. 转换 Markdown ---
         let html = marked.parse(text);
 
-        // --- 4. 终极列表进化处理 (解决空行和错乱问题) ---
-        // 通过回调函数彻底粉碎 <li> 内部导致排版崩坏的 <p> 标签
-        html = html.replace(/<li[^>]*>([\s\S]*?)<\/li>/g, function(match, innerContent) {
-            let cleanContent = innerContent.replace(/<\/?p[^>]*>/g, '').trim();
-            return '<li>' + cleanContent + '</li>';
+        // 第一步：粉碎 <li> 内部的 <p> 标签，并去掉首尾多余空格
+        html = html.replace(/<li>([\s\S]*?)<\/li>/g, function(match, innerContent) {
+            return '<li>' + innerContent.replace(/<\/?p[^>]*>/g, '').trim() + '</li>';
         });
 
+        // 第二步（本次核心修复）：彻底榨干列表标签之间的隐藏换行符（\n）
+        // 微信正是把这些换行符误解析成了空的 5. 和 7.！
+        html = html.replace(/<\/li>\s+<li/g, '</li><li');
+        html = html.replace(/<ul>\s+<li/g, '<ul><li');
+        html = html.replace(/<ol>\s+<li/g, '<ol><li');
+        html = html.replace(/<\/li>\s+<\/ul>/g, '</li></ul>');
+        html = html.replace(/<\/li>\s+<\/ol>/g, '</li></ol>');
+
         // 移除被榨干后完全空白的列表项
-        html = html.replace(/<li>\s*<\/li>/g, '');
+        html = html.replace(/<li><\/li>/g, '');
 
         // --- 5. 全要素精准注入行内样式 ---
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
