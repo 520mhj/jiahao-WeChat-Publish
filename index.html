@@ -89,20 +89,28 @@
 
         async function handleConvert() {
             const fullText = document.getElementById('inputText').value;
+            const theme = document.getElementById('themeSelect').value;
             if(!fullText) return alert("内容不能为空");
 
             const res = await fetch('/api/convert', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ text })
+                body: JSON.stringify({ text: fullText, theme })
             });
             const data = await res.json();
 
-            // 2. 接收后端完美抓取的标题并填充输入框
-            if (data.title) {
-                document.getElementById('articleTitle').value = data.title;
-                console.log("精准抓取到的标题：", data.title);
+        // --- 核心诊断区 ---
+        if (data.title) {
+            const titleInput = document.getElementById('articleTitle');
+            if (titleInput) {
+                titleInput.value = data.title;
+                console.log("✅ 标题已成功回填:", data.title);
+            } else {
+                alert("❌ 错误：前端找不到 id 为 articleTitle 的输入框！");
             }
+        } else {
+            alert("❌ 错误：后端没有传回 title，请确认 Cloudflare 是否部署成功！");
+        }
             
             currentHtml = data.html;
             currentDigest = data.digest; // 接收后端提取的摘要
