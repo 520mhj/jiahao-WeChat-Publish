@@ -73,7 +73,7 @@ export async function onRequestPost(context) {
 
         // 1. 动态提取“核心金句”作为摘要
         // 正则逻辑：匹配 > 符号后面的文字，直到行尾
-        const quoteMatch = text.match(/>\s*(.+)/);
+        const quoteMatch = text.match(/> \s*(.+)/);
         let digest = quoteMatch ? quoteMatch[1].replace(/["“”'‘’*]/g, '').trim() : "";
         // 限制摘要字数
         digest = digest.substring(0, 120);
