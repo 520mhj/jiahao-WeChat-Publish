@@ -171,9 +171,9 @@ export async function onRequestPost(context) {
         const config = THEMES[theme] || THEMES.default;
 
         // --- 1. 动态提取“核心金句”作为摘要 ---
-        const quoteMatch = text.match(/> \s*(.+)/);
-        let digest = quoteMatch ? quoteMatch[1].replace(/["“”'‘’*]/g, '').trim() : "";
-        digest = digest.substring(0, 120);
+        const lines = fullText.split("**纸页虾点评：** ")[1];
+        const segment = lines.split('\n')[0];
+        let digest = segment.substring(0, 120);
 
         // --- 2. 文本清洗与精准替换 ---
         text = text.replace(/\[cite_start\]/g, "");
@@ -182,6 +182,16 @@ export async function onRequestPost(context) {
 
         // --- 3. 转换 Markdown ---
         let html = marked.parse(text);
+
+        // --- 4. 完美方案：从 HTML 抓取标题并移除 ---
+        let extractedTitle = "";
+        // 匹配第一个 h1 到 h6 标签
+        html = html.replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>\s*/i, function(match, level, content) {
+            // 提取纯文本（去除里面可能包含的 <strong> 等内联标签）
+            extractedTitle = content.replace(/<[^>]+>/g, '').trim();
+            // 返回空字符串，表示将这个标题及其后面的换行符（\s*）从正文中彻底删除
+            return ''; 
+        });
 
         // 第一步：粉碎 <li> 内部的 <p> 标签，并去掉首尾多余空格
         html = html.replace(/<li>([\s\S]*?)<\/li>/g, function(match, innerContent) {
@@ -223,7 +233,7 @@ export async function onRequestPost(context) {
 
         const finalHtml = `<section id="MdWechat" style="${config.section}">${html}</section>`;
 
-        return new Response(JSON.stringify({ html: finalHtml, digest: digest }), {
+        return new Response(JSON.stringify({ html: finalHtml, digest: digest, title: extractedTitle }), {
             headers: { "Content-Type": "application/json" }
         });
     } catch (err) {
