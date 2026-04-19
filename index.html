@@ -78,23 +78,23 @@
             const fullText = document.getElementById('inputText').value;
             if(!fullText) return alert("内容不能为空");
 
-            // --- 标题提取调试与修复 ---
-            const lines = fullText.split('\n');
-            // 找到第一个非空的行作为潜在标题
-            const firstLine = lines.find(l => l.trim() !== "");
-        
-            if (firstLine) {
-                // 1. 去掉 Markdown 的 # 标记、加粗 **、以及方括号内容
-                let cleanTitle = firstLine.replace(/#+\s*|\*\*|__|\[.*?\]/g, '').trim();
-                // 2. 去掉 Emoji 表情 (微信标题禁忌)
-                cleanTitle = cleanTitle.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}]/gu, '');
-            
-                console.log("抓取到的原始行:", firstLine);
-                console.log("清理后的标题:", cleanTitle);
-            
+            // --- 自动标题提取与清洗 (精准截取版) ---
+            const emojiLines = fullText.split(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)[1];
+            const rawTitle = emojiLines.split('\n')[0];
+            if (rawTitle) {
+                // 3. 去除所有星号 * 并清理首尾空格
+                let cleanTitle = rawTitle.replace(/\*/g, '').trim();
+                
                 const titleInput = document.getElementById('articleTitle');
-                if(titleInput) titleInput.value = cleanTitle;
+                if(!titleInput) {
+                    titleInput.value = cleanTitle;
+                    console.log("已从表情处提取标题:", cleanTitle);
+                }
+            } else {
+                // 如果没换行，则降级为清理整行星号
+                document.getElementById('articleTitle').value = emojiLines.replace(/\*/g, '').trim();
             }
+        
 
             const res = await fetch('/api/convert', {
                 method: 'POST',
