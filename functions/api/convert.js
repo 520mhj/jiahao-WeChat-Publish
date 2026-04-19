@@ -71,11 +71,15 @@ export async function onRequestPost(context) {
         let { text, theme } = await context.request.json();
         const config = THEMES[theme] || THEMES.default;
 
-        // 1. 文本清洗与替换 [自定义需求]
-        // 移除所有方括号及其内容，如 或 
-        text = text.replace(/\[.*?\]/g, "");
+        // 1. 动态提取“核心金句”作为摘要
+        // 正则逻辑：匹配 > 符号后面的文字，直到行尾
+        const quoteMatch = text.match(/>\s*(.+)/);
+        let digest = quoteMatch ? quoteMatch[1].replace(/["“”'‘’*]/g, '').trim() : "";
+        // 限制摘要字数
+        digest = digest.substring(0, 120);
 
-        // 2. 文本替换：我是纸页虾！
+        // 2. 文本清洗与替换 [自定义需求]文本替换：我是纸页虾！
+        text = text.replace(/\[.*?\]/g, "");
         text = text.replace(/我是你们的“PDF每日学习大师”！/g, "我是纸页虾！");
 
         // 3. 转换 Markdown
@@ -94,7 +98,8 @@ export async function onRequestPost(context) {
 
         const finalHtml = `<section id="MdWechat" style="${config.section}">${html}</section>`;
 
-        return new Response(JSON.stringify({ html: finalHtml }), {
+        // 同时返回 html 和提取出的 digest
+        return new Response(JSON.stringify({ html: finalHtml, digest: digest }), {
             headers: { "Content-Type": "application/json" }
         });
     } catch (err) {
