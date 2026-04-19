@@ -84,12 +84,8 @@
             if (rawTitle) {
                 // 3. 去除所有星号 * 并清理首尾空格
                 let cleanTitle = rawTitle.replace(/\*/g, '').trim();
-                
-                const titleInput = document.getElementById('articleTitle');
-                if(!titleInput) {
-                    titleInput.value = cleanTitle;
-                    console.log("已从表情处提取标题:", cleanTitle);
-                }
+                document.getElementById('articleTitle').value = cleanTitle
+                console.log("已从表情处提取标题:", cleanTitle);
             } else {
                 // 如果没换行，则降级为清理整行星号
                 document.getElementById('articleTitle').value = emojiLines.replace(/\*/g, '').trim();
