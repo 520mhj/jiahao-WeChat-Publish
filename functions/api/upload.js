@@ -1,6 +1,6 @@
 export async function onRequestPost(context) {
     const { env } = context;
-    const { html, title } = await context.request.json();
+    const { html, title, digest} = await context.request.json();
 
     const APP_ID = env.WECHAT_APP_ID;
     const APP_SECRET = env.WECHAT_APP_SECRET;
@@ -27,7 +27,7 @@ export async function onRequestPost(context) {
                 title: title || "新文章",
                 author: AUTHOR,
                 content: html,
-                digest: "同步自二千年间助手",
+                digest: digest || "点击查看全文",
                 show_cover_pic: 0,
                 thumb_media_id: THUMB_ID, // 修复 invalid media_id 报错的关键
                 need_open_comment: 1,      // 默认内置为 1
