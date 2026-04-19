@@ -91,26 +91,19 @@
             const fullText = document.getElementById('inputText').value;
             if(!fullText) return alert("内容不能为空");
 
-            // --- 自动标题提取与清洗 (精准截取版) ---
-            const emojiLines = fullText.split(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)[1];
-            const rawTitle = emojiLines.split('\n')[0];
-            if (rawTitle) {
-                // 3. 去除所有星号 * 并清理首尾空格
-                let cleanTitle = rawTitle.replace(/\*/g, '').trim();
-                document.getElementById('articleTitle').value = cleanTitle
-                console.log("已从表情处提取标题:", cleanTitle);
-            } else {
-                // 如果没换行，则降级为清理整行星号
-                document.getElementById('articleTitle').value = emojiLines.replace(/\*/g, '').trim();
-            }
-        
-
             const res = await fetch('/api/convert', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ text })
             });
             const data = await res.json();
+
+            // 2. 接收后端完美抓取的标题并填充输入框
+            if (data.title) {
+                document.getElementById('articleTitle').value = data.title;
+                console.log("精准抓取到的标题：", data.title);
+            }
+            
             currentHtml = data.html;
             currentDigest = data.digest; // 接收后端提取的摘要
             
