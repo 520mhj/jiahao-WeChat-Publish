@@ -180,14 +180,18 @@ export async function onRequestPost(context) {
         // 精准匹配 并清除，防语法报错的终极写法
         text = text.replace(/\[cite.*\]/g, "");
 
-        // --- 3. 转换 Markdown ---
-        let html = marked.parse(text);
-
-        // --- 3. 完美标题提取法：“物理截胡” ---
+        // --- 3. 完美标题提取法：“物理截胡”（兼容版） ---
         let lines = text.split('\n');
-        // 寻找正文第一行有文字的内容
-        let titleIndex = lines.findIndex(line => line.trim() !== '');
+        let titleIndex = -1;
         let extractedTitle = "";
+
+        // 使用传统的 for 循环代替 findIndex，彻底避开旧版 TS/JS 语法报错
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim() !== '') {
+                titleIndex = i;
+                break; // 找到第一行非空文字后立即停止
+            }
+        }
 
         if (titleIndex !== -1) {
             // 提取纯文本标题（自动剔除 #、**、__ 等 Markdown 符号）
@@ -197,6 +201,9 @@ export async function onRequestPost(context) {
             // 重新拼合剩下的文本交给下游转换
             text = lines.join('\n');
         }
+
+        // --- 3. 转换 Markdown ---
+        let html = marked.parse(text);
 
         // 第一步：粉碎 <li> 内部的 <p> 标签，并去掉首尾多余空格
         html = html.replace(/<li>([\s\S]*?)<\/li>/g, function(match, innerContent) {
