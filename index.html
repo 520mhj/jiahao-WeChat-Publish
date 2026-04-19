@@ -84,42 +84,61 @@
 
 
     <script>
-        let currentHtml = "";
-        let currentDigest = ""; // 新增：用于存储动态提取的摘要
+// 确保这两个变量在最外层定义，防止未定义报错
+let currentHtml = "";
+let currentDigest = "";
 
-        async function handleConvert() {
-            const fullText = document.getElementById('inputText').value;
-            const theme = document.getElementById('themeSelect').value;
-            if(!fullText) return alert("内容不能为空");
+async function handleConvert() {
+    // 🚀 终极测试点：只要点击按钮，必须弹出这句话！
+    alert("转换功能已触发！如果看到这句话，说明新代码已经生效了！");
 
-            const res = await fetch('/api/convert', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ text: fullText, theme })
-            });
-            const data = await res.json();
+    const textElement = document.getElementById('inputText');
+    if (!textElement) return alert("❌ 找不到输入框！");
+    
+    const fullText = textElement.value;
+    if (!fullText) return alert("请输入内容再转换！");
 
-        // --- 核心诊断区 ---
+    const theme = document.getElementById('themeSelect').value;
+    
+    try {
+        const res = await fetch('/api/convert', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ text: fullText, theme })
+        });
+        
+        const data = await res.json();
+        
+        // 核心回填逻辑与弹窗验证
         if (data.title) {
             const titleInput = document.getElementById('articleTitle');
             if (titleInput) {
                 titleInput.value = data.title;
-                console.log("✅ 标题已成功回填:", data.title);
+                alert("✅ 成功抓取标题：" + data.title);
             } else {
-                alert("❌ 错误：前端找不到 id 为 articleTitle 的输入框！");
+                alert("❌ 错误：在网页里找不到 ID 为 articleTitle 的输入框");
             }
         } else {
-            alert("❌ 错误：后端没有传回 title，请确认 Cloudflare 是否部署成功！");
+            alert("⚠️ 后端没有返回标题！可能是 Cloudflare 后端代码还没部署完。");
         }
-            
-            currentHtml = data.html;
-            currentDigest = data.digest; // 接收后端提取的摘要
-            
-            // 将转换后的 HTML 注入预览区
-            const preview = document.getElementById('previewArea');
+        
+        // 渲染正文
+        currentHtml = data.html || "";
+        currentDigest = data.digest || ""; 
+        
+        const preview = document.getElementById('previewArea');
+        if (preview) {
             preview.innerHTML = currentHtml;
-            document.getElementById('uploadBtn').disabled = false;
+            preview.scrollTop = 0; 
         }
+        
+        const uploadBtn = document.getElementById('uploadBtn');
+        if (uploadBtn) uploadBtn.disabled = false;
+
+    } catch (err) {
+        alert("❌ 彻底报错了：" + err.message);
+    }
+}
 
         async function handleUpload() {
             const title = document.getElementById('articleTitle').value;
