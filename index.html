@@ -72,6 +72,7 @@
 
     <script>
         let currentHtml = "";
+        let currentDigest = ""; // 新增：用于存储动态提取的摘要
 
         async function handleConvert() {
             const fullText = document.getElementById('inputText').value;
@@ -102,6 +103,7 @@
             });
             const data = await res.json();
             currentHtml = data.html;
+            currentDigest = data.digest; // 接收后端提取的摘要
             
             // 将转换后的 HTML 注入预览区
             const preview = document.getElementById('previewArea');
@@ -122,7 +124,7 @@
                 const res = await fetch('/api/upload', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ html: currentHtml, title })
+                    body: JSON.stringify({ html: currentHtml, title: title,digest: currentDigest })
                 });
                 const result = await res.json();
                 if(result.success) {
