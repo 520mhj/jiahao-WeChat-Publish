@@ -175,8 +175,10 @@ export async function onRequestPost(context) {
         digest = digest.substring(0, 120);
 
         // 2. 文本清洗与替换
-        text = text.replace(/\[.*?\]/g, "");
-        text = text.replace(/我是你们的“PDF每日学习大师”！/g, "我是纸页虾！");
+        text = text.replace(/\[cite_start\]/g, "");
+        text = text.replace(/\[cite:\]/g, "");
+        text = text.replace(/\/g, "");
+        text = text.replace(/^\d+\.\s*$/gm, "");
 
         // 3. 转换 Markdown
         let html = marked.parse(text);
@@ -184,6 +186,8 @@ export async function onRequestPost(context) {
         // 4.--- 核心修复：解决列表多余空行问题 ---
         // 移除 <li> 标签内部自动生成的 <p> 标签，防止边距叠加产生空行
         html = html.replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/g, '<li>$1</li>');
+
+        html = html.replace(/<li>\s*<\/li>/g, '');
 
         // 5. 精准注入行内样式 (全面补齐 Markdown 格式支持)
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
