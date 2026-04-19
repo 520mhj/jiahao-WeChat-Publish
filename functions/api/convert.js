@@ -183,15 +183,20 @@ export async function onRequestPost(context) {
         // --- 3. 转换 Markdown ---
         let html = marked.parse(text);
 
-        // --- 4. 完美方案：从 HTML 抓取标题并移除 ---
+        // --- 3. 完美标题提取法：“物理截胡” ---
+        let lines = text.split('\n');
+        // 寻找正文第一行有文字的内容
+        let titleIndex = lines.findIndex(line => line.trim() !== '');
         let extractedTitle = "";
-        // 匹配第一个 h1 到 h6 标签
-        html = html.replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>\s*/i, function(match, level, content) {
-            // 提取纯文本（去除里面可能包含的 <strong> 等内联标签）
-            extractedTitle = content.replace(/<[^>]+>/g, '').trim();
-            // 返回空字符串，表示将这个标题及其后面的换行符（\s*）从正文中彻底删除
-            return ''; 
-        });
+
+        if (titleIndex !== -1) {
+            // 提取纯文本标题（自动剔除 #、**、__ 等 Markdown 符号）
+            extractedTitle = lines[titleIndex].replace(/#+\s*|\*\*|__/g, '').trim();
+            // 直接将这一行从数组中彻底抹除！
+            lines.splice(titleIndex, 1);
+            // 重新拼合剩下的文本交给下游转换
+            text = lines.join('\n');
+        }
 
         // 第一步：粉碎 <li> 内部的 <p> 标签，并去掉首尾多余空格
         html = html.replace(/<li>([\s\S]*?)<\/li>/g, function(match, innerContent) {
