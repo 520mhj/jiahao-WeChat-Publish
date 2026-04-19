@@ -181,8 +181,9 @@ export async function onRequestPost(context) {
         // 3. 转换 Markdown
         let html = marked.parse(text);
 
-        // 4. 移除正文开头的第一个 H1 标签
-        // html = html.replace(/^\s*<h1\b[^>]*>.*?<\/h1>/is, '');
+        // 4.--- 核心修复：解决列表多余空行问题 ---
+        // 移除 <li> 标签内部自动生成的 <p> 标签，防止边距叠加产生空行
+        html = html.replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/g, '<li>$1</li>');
 
         // 5. 精准注入行内样式 (全面补齐 Markdown 格式支持)
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
