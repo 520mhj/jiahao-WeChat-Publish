@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 
+// 全套 7 款主题样式仓库
 const THEMES = {
     "default": { // 典雅紫
         section: 'padding: 20px 10px; color: #595959; font-family: Optima, serif; font-size: 16px; line-height: 1.6; background-color: #f9f7fc;',
@@ -169,35 +170,37 @@ export async function onRequestPost(context) {
         let { text, theme } = await context.request.json();
         const config = THEMES[theme] || THEMES.default;
 
-        // 1. 动态提取“核心金句”作为摘要
+        // --- 1. 动态提取“核心金句”作为摘要 ---
         const quoteMatch = text.match(/> \s*(.+)/);
         let digest = quoteMatch ? quoteMatch[1].replace(/["“”'‘’*]/g, '').trim() : "";
         digest = digest.substring(0, 120);
 
-        // 2. 文本清洗与替换
+        // --- 2. 文本清洗与精准替换 ---
         text = text.replace(/\[cite_start\]/g, "");
-        text = text.replace(/\[cite.*\]/g, "");
-        // 清理空列表项（包括有序和无序），避免出现单独的 5. 或 7.
+        // 精准匹配 并清除，防语法报错的终极写法
+        text = text.replace(/\]*\]/g, "");
+        
+        // 扫尾工作：清理被删空后遗留的无用数字序列 (如: "1. ")
         text = text.replace(/^[ \t]*\d+\.[ \t]*$/gm, "");
         text = text.replace(/^[ \t]*[-*+][ \t]*$/gm, "");
 
-        // 3. 转换 Markdown
+        // 文本替换需求
+        text = text.replace(/我是你们的“PDF每日学习大师”！/g, "我是纸页虾！");
+
+        // --- 3. 转换 Markdown ---
         let html = marked.parse(text);
 
-        // 4. --- 核心修复：终极列表净化器 ---
-        // 【关键修复 2】：不管 <li> 里面嵌套了多少个 <p> 或换行，全部剥离掉！
+        // --- 4. 终极列表进化处理 (解决空行和错乱问题) ---
+        // 通过回调函数彻底粉碎 <li> 内部导致排版崩坏的 <p> 标签
         html = html.replace(/<li[^>]*>([\s\S]*?)<\/li>/g, function(match, innerContent) {
-            // 删掉内部所有的 <p> 和 </p> 标签
-            let cleanContent = innerContent.replace(/<\/?p[^>]*>/g, '');
-            // 清理首尾多余的空白、换行符
-            cleanContent = cleanContent.trim();
+            let cleanContent = innerContent.replace(/<\/?p[^>]*>/g, '').trim();
             return '<li>' + cleanContent + '</li>';
         });
 
-        // 移除被扒干净后变成完全空的 <li>
+        // 移除被榨干后完全空白的列表项
         html = html.replace(/<li>\s*<\/li>/g, '');
 
-        // 5. 精准注入行内样式 (全面补齐 Markdown 格式支持)
+        // --- 5. 全要素精准注入行内样式 ---
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
         html = html.replace(/<h2/g, `<h2 style="${config.h2}"`);
         html = html.replace(/<h3/g, `<h3 style="${config.h3}"`);
