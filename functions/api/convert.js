@@ -186,10 +186,17 @@ export async function onRequestPost(context) {
         // 3. 转换 Markdown
         let html = marked.parse(text);
 
-        // 4.--- 核心修复：解决列表多余空行问题 ---
-        // 移除 <li> 标签内部自动生成的 <p> 标签，防止边距叠加产生空行
-        html = html.replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/g, '<li>$1</li>');
+        // 4. --- 核心修复：终极列表净化器 ---
+        // 【关键修复 2】：不管 <li> 里面嵌套了多少个 <p> 或换行，全部剥离掉！
+        html = html.replace(/<li[^>]*>([\s\S]*?)<\/li>/g, function(match, innerContent) {
+            // 删掉内部所有的 <p> 和 </p> 标签
+            let cleanContent = innerContent.replace(/<\/?p[^>]*>/g, '');
+            // 清理首尾多余的空白、换行符
+            cleanContent = cleanContent.trim();
+            return '<li>' + cleanContent + '</li>';
+        });
 
+        // 移除被扒干净后变成完全空的 <li>
         html = html.replace(/<li>\s*<\/li>/g, '');
 
         // 5. 精准注入行内样式 (全面补齐 Markdown 格式支持)
