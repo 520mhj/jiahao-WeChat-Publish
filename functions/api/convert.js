@@ -171,8 +171,8 @@ export async function onRequestPost(context) {
         const config = THEMES[theme] || THEMES.default;
 
         // --- 1. 动态提取“核心金句”作为摘要 ---
-        const lines = text.split("**纸页虾点评：** ")[1];
-        const segment = lines.split('\n')[0];
+        const zhaiyao = text.split("**纸页虾点评：** ")[1];
+        const segment = zhaiyao.split('\n')[0];
         let digest = segment.substring(0, 120);
 
         // --- 2. 文本清洗与精准替换 ---
