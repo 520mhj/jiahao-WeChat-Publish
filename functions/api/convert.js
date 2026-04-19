@@ -176,7 +176,7 @@ export async function onRequestPost(context) {
 
         // 2. 文本清洗与替换
         text = text.replace(/\[cite_start\]/g, "");
-        text = text.replace(/\[citeL.*\]/g, "");
+        text = text.replace(/\[cite.*\]/g, "");
         // 使用 new RegExp 字符串写法，彻底避免部署工具对复杂正则符号报错
         text = text.replace(new RegExp("\\", "g"), "");
         // 清理空列表项（包括有序和无序），避免出现单独的 5. 或 7.
