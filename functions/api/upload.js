@@ -1,11 +1,13 @@
 export async function onRequestPost(context) {
     const { env } = context;
-    const { html, title, digest} = await context.request.json();
+    const { html, title, digest, thumb_media_id } = await context.request.json();
 
     const APP_ID = env.WECHAT_APP_ID;
     const APP_SECRET = env.WECHAT_APP_SECRET;
     const AUTHOR = env.WECHAT_DEFAULT_AUTHOR || "纸页虾";
-    const THUMB_ID = env.WECHAT_DEFAULT_THUMB_MEDIA_ID || "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh"; // 必须在 Cloudflare 后台设置此变量
+    
+    // 【核心修改】优先级: 1.前端本地固化的ID -> 2.环境变量默认ID -> 3.写死的保底ID
+    const THUMB_ID = thumb_media_id || env.WECHAT_DEFAULT_THUMB_MEDIA_ID || "Gp4atzJl6iIcXPEQOa2ANILEZo2xGxOZKMKk1LyLdlIoWitf6e54SSt2ommc9ykh";
 
     try {
         // 1. 获取 Token
