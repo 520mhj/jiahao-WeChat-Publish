@@ -9,33 +9,49 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
         body { font-family: 'Noto Serif SC', serif; }
         .preview-container #MdWechat { all: initial; font-family: inherit; }
+        /* 隐藏元素的通用类 */
+        .cloak { display: none !important; }
     </style>
 </head>
 <body class="bg-[#faf8f5] min-h-screen text-[#333]">
-    <div class="max-w-6xl mx-auto px-6 py-10">
+    
+    <div id="authModal" class="cloak fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 flex flex-col gap-4">
+            <h2 id="authTitle" class="text-xl font-bold text-stone-800 tracking-wider">身份验证</h2>
+            <p id="authDesc" class="text-sm text-stone-500">请输入访问密码</p>
+            <input type="password" id="authPassword" class="px-4 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600" placeholder="••••••••" onkeypress="if(event.key === 'Enter') handleAuth()">
+            <button id="authBtn" onclick="handleAuth()" class="w-full bg-stone-800 text-stone-100 py-2.5 rounded-xl hover:bg-stone-700 transition-all font-bold tracking-widest mt-2">进入系统</button>
+        </div>
+    </div>
+
+    <div id="imageModal" class="cloak fixed inset-0 bg-black/85 z-[100] flex items-center justify-center cursor-pointer" onclick="this.classList.add('cloak')">
+        <img id="modalImg" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-lg shadow-2xl" />
+        <p class="absolute bottom-10 text-white/50 text-sm tracking-widest">点击任意区域关闭</p>
+    </div>
+
+    <div id="mainApp" class="cloak max-w-6xl mx-auto px-6 py-10">
         <header class="flex justify-between items-center mb-10 border-b border-stone-200 pb-6">
             <div>
                 <h1 class="text-2xl font-bold text-stone-800 tracking-wider">发布精灵</h1>
                 <p class="text-sm text-stone-500 mt-1">微信文章发布系统</p>
             </div>
 
-            
             <div class="w-full flex justify-between items-center mt-6 pt-4 border-t border-stone-200">
                 <div class="flex items-center gap-3">
                     <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">自定义封面:</label>
                     <input type="file" id="coverFileInput" accept="image/png, image/jpeg, image/jpg" class="text-sm text-stone-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
-                    <button onclick="handleCoverUpload(event)" class="px-4 py-1.5 bg-stone-800 text-stone-100 rounded-lg text-xs hover:bg-stone-700 transition-all font-bold tracking-wider">上传并固化</button>
+                    <button onclick="handleCoverUpload(event)" class="px-4 py-1.5 bg-stone-800 text-stone-100 rounded-lg text-xs hover:bg-stone-700 transition-all font-bold tracking-wider">上传至KV并固化</button>
                 </div>
-                <div id="coverStatus" class="text-xs text-stone-400 font-mono bg-white px-3 py-1 rounded-md border border-stone-100">当前使用默认封面</div>
+                
+                <div class="flex items-center gap-4">
+                    <div id="coverPreviewContainer" class="cloak">
+                        <img id="coverPreviewImg" src="" title="点击放大查看当前封面" class="w-10 h-10 object-cover rounded border border-stone-200 cursor-pointer hover:opacity-80 transition-opacity" onclick="openFullscreenCover()" />
+                    </div>
+                    <div id="coverStatus" class="text-xs text-stone-400 font-mono bg-white px-3 py-1 rounded-md border border-stone-100">当前使用默认封面</div>
+                </div>
             </div>
 
-            
-            <div class="flex gap-4 items-center">
-                
-                <div class="flex items-center gap-1">
-                    <a href="https://www.cloudflare-cn.com/ips/" target="_blank" class="text-[15px] text-stone-300 hover:text-stone-500 transition-colors" title="查看 Cloudflare IP 白名单">(IP)</a>
-                </div>
-                
+            <div class="flex gap-4 items-center mt-6">
                 <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">主题:</label>
                 <select id="themeSelect" onchange="handleConvert()" class="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer">
                     <option value="default">典雅紫 (Default)</option>
@@ -46,9 +62,7 @@
                     <option value="green">清新森林 (Green)</option>
                     <option value="dark">静谧深蓝 (Dark)</option>
                 </select>
-            </div>
-            <div class="flex gap-4">
-                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-64">
+                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-64 ml-4">
             </div>
         </header>
 
@@ -70,20 +84,163 @@
                     发送至公众号草稿箱
                 </button>
             </div>
-
-             <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
                 class="fixed bottom-10 right-4 bg-white border border-stone-200 p-3 rounded-full shadow-xl hover:bg-stone-50 transition-all z-50 flex items-center justify-center group"
                 title="返回顶部">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-500 group-hover:text-stone-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
             </button>
-        
         </div>
     </div>
 
-
     <script>
+        let currentHtml = "";
+        let currentDigest = "";
+        let isSetupMode = false; // 判断当前是登录还是初始化
+
+        // --- 1. 鉴权与初始化逻辑 ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // 试探性获取一下封面，如果 401 说明未登录
+                const res = await fetch('/api/cover');
+                if (res.status === 401) {
+                    const data = await res.json();
+                    document.getElementById('authModal').classList.remove('cloak');
+                    if (data.code === 'SETUP_REQUIRED') {
+                        isSetupMode = true;
+                        document.getElementById('authTitle').innerText = "首次运行配置";
+                        document.getElementById('authDesc').innerText = "请设置一个访问密码以保护你的系统 (存入KV)";
+                        document.getElementById('authBtn').innerText = "设置密码";
+                    }
+                } else {
+                    // 已登录，进入系统
+                    initSystem();
+                }
+            } catch (e) {
+                alert("网络错误");
+            }
+        });
+
+        async function handleAuth() {
+            const pwd = document.getElementById('authPassword').value;
+            if(!pwd) return;
+            
+            const res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd, isSetup: isSetupMode })
+            });
+
+            if (res.ok) {
+                document.getElementById('authModal').classList.add('cloak');
+                initSystem();
+            } else {
+                const err = await res.json();
+                alert(err.error || "密码错误");
+            }
+        }
+
+        // --- 2. 系统核心逻辑 ---
+        async function initSystem() {
+            document.getElementById('mainApp').classList.remove('cloak');
+            
+            // 【核心】从 KV 拉取最新的封面和ID，兜底用本地存储
+            let localThumbId = localStorage.getItem("fixed_thumb_media_id");
+            try {
+                const res = await fetch('/api/cover');
+                const data = await res.json();
+                
+                if (data.success && data.media_id) {
+                    // 覆盖本地
+                    localStorage.setItem("fixed_thumb_media_id", data.media_id);
+                    localThumbId = data.media_id;
+                    
+                    // 渲染图片
+                    const imgUrl = '/api/cover_image?t=' + new Date().getTime(); // 防止浏览器缓存
+                    document.getElementById('coverPreviewImg').src = imgUrl;
+                    document.getElementById('modalImg').src = imgUrl;
+                    document.getElementById('coverPreviewContainer').classList.remove('cloak');
+                    document.getElementById("coverStatus").innerHTML = `<span class="text-emerald-600">已应用云端KV封面:</span> ${localThumbId.substring(0, 15)}...`;
+                } else if (localThumbId) {
+                    document.getElementById("coverStatus").innerHTML = `<span class="text-stone-400">使用本地离线ID:</span> ${localThumbId.substring(0, 15)}...`;
+                }
+            } catch (e) {
+                console.error("加载云端封面失败", e);
+            }
+        }
+
+        function openFullscreenCover() {
+            document.getElementById('imageModal').classList.remove('cloak');
+        }
+
+        async function handleCoverUpload(event) {
+            const fileInput = document.getElementById('coverFileInput');
+            const file = fileInput.files[0];
+            if (!file) return alert("请先选择一张图片作为封面");
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "正在上传与存储...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload_cover', {
+                    method: 'POST',
+                    body: formData 
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    // 重新拉取以刷新UI界面
+                    await initSystem();
+                    alert("封面上传成功！已同步存入云端 KV，再次上传将自动覆盖。");
+                } else {
+                    alert("封面上传失败: " + result.error);
+                }
+            } catch (e) {
+                alert("请求出错: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                fileInput.value = ""; // 清空选中状态
+            }
+        }
+
+        async function handleConvert() {
+            const text = document.getElementById('inputText').value;
+            const theme = document.getElementById('themeSelect').value;
+            if(!text) return;
+            
+            const res = await fetch('/api/convert', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ text, theme })
+            });
+            const data = await res.json();
+
+            if (data.title) {
+                const titleInput = document.getElementById('articleTitle');
+                if (titleInput) titleInput.value = data.title;
+            }
+            
+            currentHtml = data.html;
+            currentDigest = data.digest; 
+            
+            const preview = document.getElementById('previewArea');
+            preview.innerHTML = currentHtml;
+            // 同步预览区域的背景色，让预览更真实
+            const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
+            const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
+            if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
+            // 自动滚动到预览区域顶部，方便查看
+            preview.scrollTop = 0;
+            document.getElementById('uploadBtn').disabled = false;
+        }
+
         async function handleUpload() {
             const title = document.getElementById('articleTitle').value;
             if(!title) return alert("请先输入文章标题");
@@ -93,7 +250,7 @@
             btn.innerText = "正在同步至微信...";
             btn.disabled = true;
 
-            // 读取固化在本地的封面 ID
+            // 这里优先取本地 localStorage 中的最新 ID
             const fixedThumbId = localStorage.getItem("fixed_thumb_media_id");
 
             try {
@@ -104,7 +261,7 @@
                         html: currentHtml,
                         title: title,
                         digest: currentDigest,
-                        thumb_media_id: fixedThumbId // 新增：将封面 ID 传给后端
+                        thumb_media_id: fixedThumbId 
                     })
                 });
                 const result = await res.json();
@@ -120,91 +277,6 @@
                 btn.disabled = false;
             }
         }
-
-        // 监听输入框变化也能即时转换（可选）
-        // 确保这两个变量在最外层定义，防止未定义报错
-    let currentHtml = "";
-    let currentDigest = "";
-    async function handleConvert() {
-        const text = document.getElementById('inputText').value;
-        const theme = document.getElementById('themeSelect').value;
-        if(!text) return;
-        
-        const res = await fetch('/api/convert', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ text, theme })
-        });
-        const data = await res.json();
-
-        // --- 核心回填逻辑 ---
-        if (data.title) {
-            const titleInput = document.getElementById('articleTitle');
-            if (titleInput) {
-                titleInput.value = data.title;
-                console.log("成功回填标题：", data.title); // 悄悄在控制台打印，不弹窗打扰
-            }
-        }
-        
-        currentHtml = data.html;
-        currentDigest = data.digest; // 接收后端提取的摘要
-        
-        const preview = document.getElementById('previewArea');
-        preview.innerHTML = currentHtml;
-        // 同步预览区域的背景色，让预览更真实
-        const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
-        const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
-        if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
-
-        // 自动滚动到预览区域顶部，方便查看
-        preview.scrollTop = 0;
-        document.getElementById('uploadBtn').disabled = false;
-    }
-
-    // --- 新增：页面加载时恢复本地固化的封面 ID ---
-        document.addEventListener("DOMContentLoaded", () => {
-            const savedThumbId = localStorage.getItem("fixed_thumb_media_id");
-            if (savedThumbId) {
-                document.getElementById("coverStatus").innerHTML = `<span class="text-emerald-600">已固化封面 ID:</span> ${savedThumbId.substring(0, 15)}...`;
-            }
-        });
-
-        // --- 新增：处理封面上传 ---
-        async function handleCoverUpload(event) {
-            const fileInput = document.getElementById('coverFileInput');
-            const file = fileInput.files[0];
-            if (!file) return alert("请先选择一张图片作为封面");
-
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "正在上传至微信...";
-            btn.disabled = true;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const res = await fetch('/api/upload_cover', {
-                    method: 'POST',
-                    body: formData // Fetch 会自动设置正确的 multipart/form-data Boundary
-                });
-                const result = await res.json();
-                
-                if (result.success) {
-                    // 将上传成功返回的 media_id 固化在本地
-                    localStorage.setItem("fixed_thumb_media_id", result.media_id);
-                    document.getElementById("coverStatus").innerHTML = `<span class="text-emerald-600">已固化封面 ID:</span> ${result.media_id.substring(0, 15)}...`;
-                    alert("封面上传成功！已固化，后续发送将默认使用该封面。");
-                } else {
-                    alert("封面上传失败: " + result.error);
-                }
-            } catch (e) {
-                alert("请求出错: " + e.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }    
     </script>
 </body>
 </html>
