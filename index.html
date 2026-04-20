@@ -3,57 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微信文章 - 创作助手</title>
+    <title>发布精灵 - 创作中心</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
-        body { font-family: 'Noto Serif SC', serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+SC:wght@400;700&display=swap');
+        body { font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif; background-color: #f5f5f7; color: #1d1d1f; }
+        .apple-glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .preview-container #MdWechat { all: initial; font-family: inherit; }
-        /* 隐藏元素的通用类 */
         .cloak { display: none !important; }
+        /* 自定义滚动条 - 苹果风格 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
     </style>
 </head>
-<body class="bg-[#faf8f5] min-h-screen text-[#333]">
-    
-    <div id="authModal" class="cloak fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 flex flex-col gap-4">
-            <h2 id="authTitle" class="text-xl font-bold text-stone-800 tracking-wider">身份验证</h2>
-            <p id="authDesc" class="text-sm text-stone-500">请输入访问密码</p>
-            <input type="password" id="authPassword" class="px-4 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600" placeholder="••••••••" onkeypress="if(event.key === 'Enter') handleAuth()">
-            <button id="authBtn" onclick="handleAuth()" class="w-full bg-stone-800 text-stone-100 py-2.5 rounded-xl hover:bg-stone-700 transition-all font-bold tracking-widest mt-2">进入系统</button>
+<body class="min-h-screen">
+
+    <div id="authModal" class="cloak fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center">
+        <div class="bg-white/90 p-8 rounded-[24px] shadow-2xl w-[360px] text-center border border-white/20">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white shadow-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2 id="authTitle" class="text-xl font-semibold mb-1">需要验证</h2>
+            <p id="authDesc" class="text-sm text-gray-500 mb-6">请输入您的访问密码</p>
+            <input type="password" id="authPassword" class="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:ring-2 focus:ring-blue-500 mb-4 transition-all" placeholder="密码" onkeypress="if(event.key === 'Enter') handleAuth()">
+            <button id="authBtn" onclick="handleAuth()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 active:scale-95 transition-all">进入</button>
         </div>
     </div>
 
-    <div id="imageModal" class="cloak fixed inset-0 bg-black/85 z-[100] flex items-center justify-center cursor-pointer" onclick="this.classList.add('cloak')">
-        <img id="modalImg" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-lg shadow-2xl" />
-        <p class="absolute bottom-10 text-white/50 text-sm tracking-widest">点击任意区域关闭</p>
+    <div id="imageModal" class="cloak fixed inset-0 bg-black/90 z-[110] flex items-center justify-center cursor-zoom-out" onclick="this.classList.add('cloak')">
+        <img id="modalImg" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-lg shadow-2xl">
     </div>
 
-    <div id="mainApp" class="cloak max-w-6xl mx-auto px-6 py-10">
-        <header class="flex justify-between items-center mb-10 border-b border-stone-200 pb-6">
+    <div id="mainApp" class="cloak max-w-[1200px] mx-auto px-6 py-10">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
             <div>
-                <h1 class="text-2xl font-bold text-stone-800 tracking-wider">发布精灵</h1>
-                <p class="text-sm text-stone-500 mt-1">微信文章发布系统</p>
+                <h1 class="text-3xl font-bold tracking-tight">发布精灵</h1>
+                <p class="text-gray-500 text-sm mt-1">WeChat Article Publishing System</p>
             </div>
-
-            <div class="w-full flex justify-between items-center mt-6 pt-4 border-t border-stone-200">
-                <div class="flex items-center gap-3">
-                    <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">自定义封面:</label>
-                    <input type="file" id="coverFileInput" accept="image/png, image/jpeg, image/jpg" class="text-sm text-stone-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
-                    <button onclick="handleCoverUpload(event)" class="px-4 py-1.5 bg-stone-800 text-stone-100 rounded-lg text-xs hover:bg-stone-700 transition-all font-bold tracking-wider">上传至KV并固化</button>
+            
+            <div class="apple-glass p-2 rounded-2xl border border-white/40 shadow-sm flex items-center gap-3">
+                <div id="coverPreviewContainer" class="cloak flex items-center gap-2 pl-2">
+                    <img id="coverPreviewImg" src="" class="w-10 h-10 object-cover rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openFullscreenCover()">
+                    <div class="h-6 w-[1px] bg-gray-300"></div>
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    <div id="coverPreviewContainer" class="cloak">
-                        <img id="coverPreviewImg" src="" title="点击放大查看当前封面" class="w-10 h-10 object-cover rounded border border-stone-200 cursor-pointer hover:opacity-80 transition-opacity" onclick="openFullscreenCover()" />
-                    </div>
-                    <div id="coverStatus" class="text-xs text-stone-400 font-mono bg-white px-3 py-1 rounded-md border border-stone-100">当前使用默认封面</div>
+                <div class="flex items-center gap-2">
+                    <input type="file" id="coverFileInput" accept="image/*" class="hidden">
+                    <button onclick="document.getElementById('coverFileInput').click()" class="text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-100 transition">选择封面</button>
+                    <button onclick="handleCoverUpload(event)" id="coverUploadBtn" class="bg-black text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-gray-800 active:scale-95 transition">上传并固化</button>
                 </div>
             </div>
+        </header>
 
-            <div class="flex gap-4 items-center mt-6">
-                <label class="text-xs text-stone-400 font-bold uppercase tracking-widest">主题:</label>
-                <select id="themeSelect" onchange="handleConvert()" class="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-2">
+                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="w-full px-5 py-4 bg-white rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all font-medium">
+            </div>
+            <div class="relative">
+                <select id="themeSelect" onchange="handleConvert()" class="w-full px-5 py-4 bg-white rounded-2xl border border-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer font-medium">
                     <option value="default">典雅紫 (Default)</option>
                     <option value="apple">极简科技 (Apple)</option>
                     <option value="notion">优雅手帐 (Notion)</option>
@@ -62,197 +69,170 @@
                     <option value="green">清新森林 (Green)</option>
                     <option value="dark">静谧深蓝 (Dark)</option>
                 </select>
-                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="px-4 py-2 bg-white border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400 w-64 ml-4">
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[70vh]">
-            <div class="flex flex-col gap-4">
-                <label class="text-xs uppercase tracking-widest text-stone-400 font-bold">Markdown 文本</label>
-                <textarea id="inputText" class="flex-1 p-6 bg-white border border-stone-200 rounded-xl shadow-sm focus:outline-none focus:border-stone-400 leading-relaxed resize-none" placeholder="在此输入正文..."></textarea>
-                <button onclick="handleConvert()" class="bg-stone-800 text-stone-100 py-3 rounded-xl hover:bg-stone-700 transition-all font-bold tracking-widest">
-                    点击转换 HTML
-                </button>
-            </div>
-
-            <div class="flex flex-col gap-4">
-                <label class="text-xs uppercase tracking-widest text-stone-400 font-bold">微信预览回显</label>
-                <div id="previewArea" class="flex-1 bg-white border border-stone-200 rounded-xl shadow-sm overflow-y-auto p-4 preview-container">
-                    <div class="text-stone-300 italic text-center mt-20">转换后的内容将在此渲染</div>
+                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
-                <button id="uploadBtn" onclick="handleUpload()" disabled class="bg-emerald-700 text-white py-3 rounded-xl hover:bg-emerald-800 disabled:bg-stone-200 disabled:text-stone-400 transition-all font-bold tracking-widest">
-                    发送至公众号草稿箱
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[65vh]">
+            <div class="flex flex-col gap-4">
+                <div class="flex-1 bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                    <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <span class="text-[11px] font-bold uppercase tracking-tighter text-gray-400">Markdown 文本</span>
+                    </div>
+                    <textarea id="inputText" class="flex-1 p-6 focus:outline-none resize-none text-sm leading-relaxed" placeholder="在此输入 Markdown 正文..."></textarea>
+                </div>
+                <button onclick="handleConvert()" class="bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-200">
+                    转换并预览
                 </button>
             </div>
-            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
-                class="fixed bottom-10 right-4 bg-white border border-stone-200 p-3 rounded-full shadow-xl hover:bg-stone-50 transition-all z-50 flex items-center justify-center group"
-                title="返回顶部">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-500 group-hover:text-stone-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-            </button>
+
+            <div class="flex flex-col gap-4">
+                <div class="flex-1 bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                    <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <span class="text-[11px] font-bold uppercase tracking-tighter text-gray-400">微信手机端预览</span>
+                        <div id="coverStatus" class="text-[10px] text-gray-400 font-mono">Ready</div>
+                    </div>
+                    <div id="previewArea" class="flex-1 overflow-y-auto p-4 preview-container">
+                        <div class="text-gray-300 italic text-center mt-32 text-sm">转换后的内容将在此回显</div>
+                    </div>
+                </div>
+                <button id="uploadBtn" onclick="handleUpload()" disabled class="bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 active:scale-[0.98] transition-all shadow-lg shadow-emerald-100">
+                    发布至公众号草稿箱
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         let currentHtml = "";
         let currentDigest = "";
-        let isSetupMode = false; // 判断当前是登录还是初始化
+        let isSetupMode = false;
 
-        // --- 1. 鉴权与初始化逻辑 ---
+        // --- 1. 鉴权逻辑 ---
         document.addEventListener("DOMContentLoaded", async () => {
             try {
-                // 试探性获取一下封面，如果 401 说明未登录
                 const res = await fetch('/api/cover');
                 if (res.status === 401) {
                     const data = await res.json();
                     document.getElementById('authModal').classList.remove('cloak');
                     if (data.code === 'SETUP_REQUIRED') {
                         isSetupMode = true;
-                        document.getElementById('authTitle').innerText = "首次运行配置";
-                        document.getElementById('authDesc').innerText = "请设置一个访问密码以保护你的系统 (存入KV)";
-                        document.getElementById('authBtn').innerText = "设置密码";
+                        document.getElementById('authTitle').innerText = "首次配置";
+                        document.getElementById('authDesc').innerText = "请为您的 KV 数据库设置一个管理密码";
                     }
                 } else {
-                    // 已登录，进入系统
                     initSystem();
                 }
-            } catch (e) {
-                alert("网络错误");
-            }
+            } catch (e) { console.error(e); }
         });
 
         async function handleAuth() {
             const pwd = document.getElementById('authPassword').value;
             if(!pwd) return;
-            
             const res = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: pwd, isSetup: isSetupMode })
             });
-
             if (res.ok) {
                 document.getElementById('authModal').classList.add('cloak');
                 initSystem();
-            } else {
-                const err = await res.json();
-                alert(err.error || "密码错误");
-            }
+            } else { alert("验证失败"); }
         }
 
         // --- 2. 系统核心逻辑 ---
         async function initSystem() {
             document.getElementById('mainApp').classList.remove('cloak');
-            
-            // 【核心】从 KV 拉取最新的封面和ID，兜底用本地存储
-            let localThumbId = localStorage.getItem("fixed_thumb_media_id");
-            try {
-                const res = await fetch('/api/cover');
-                const data = await res.json();
-                
-                if (data.success && data.media_id) {
-                    // 覆盖本地
-                    localStorage.setItem("fixed_thumb_media_id", data.media_id);
-                    localThumbId = data.media_id;
-                    
-                    // 渲染图片
-                    const imgUrl = '/api/cover_image?t=' + new Date().getTime(); // 防止浏览器缓存
-                    document.getElementById('coverPreviewImg').src = imgUrl;
-                    document.getElementById('modalImg').src = imgUrl;
-                    document.getElementById('coverPreviewContainer').classList.remove('cloak');
-                    document.getElementById("coverStatus").innerHTML = `<span class="text-emerald-600">已应用云端KV封面:</span> ${localThumbId.substring(0, 15)}...`;
-                } else if (localThumbId) {
-                    document.getElementById("coverStatus").innerHTML = `<span class="text-stone-400">使用本地离线ID:</span> ${localThumbId.substring(0, 15)}...`;
-                }
-            } catch (e) {
-                console.error("加载云端封面失败", e);
+            // 初始化封面
+            const res = await fetch('/api/cover');
+            const data = await res.json();
+            if (data.success && data.media_id) {
+                localStorage.setItem("fixed_thumb_media_id", data.media_id);
+                const imgUrl = '/api/cover_image?t=' + Date.now();
+                document.getElementById('coverPreviewImg').src = imgUrl;
+                document.getElementById('modalImg').src = imgUrl;
+                document.getElementById('coverPreviewContainer').classList.remove('cloak');
+                document.getElementById("coverStatus").innerText = "ID: " + data.media_id.substring(0, 8);
             }
         }
 
-        function openFullscreenCover() {
-            document.getElementById('imageModal').classList.remove('cloak');
-        }
+        function openFullscreenCover() { document.getElementById('imageModal').classList.remove('cloak'); }
 
         async function handleCoverUpload(event) {
             const fileInput = document.getElementById('coverFileInput');
             const file = fileInput.files[0];
-            if (!file) return alert("请先选择一张图片作为封面");
-
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "正在上传与存储...";
+            if (!file) return alert("请先选择图片");
+            
+            const btn = document.getElementById('coverUploadBtn');
+            btn.innerText = "...";
             btn.disabled = true;
 
             const formData = new FormData();
             formData.append('file', file);
-
             try {
-                const res = await fetch('/api/upload_cover', {
-                    method: 'POST',
-                    body: formData 
-                });
+                const res = await fetch('/api/upload_cover', { method: 'POST', body: formData });
                 const result = await res.json();
-                
                 if (result.success) {
-                    // 重新拉取以刷新UI界面
                     await initSystem();
-                    alert("封面上传成功！已同步存入云端 KV，再次上传将自动覆盖。");
-                } else {
-                    alert("封面上传失败: " + result.error);
+                    alert("封面已同步至云端 KV");
                 }
-            } catch (e) {
-                alert("请求出错: " + e.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-                fileInput.value = ""; // 清空选中状态
-            }
+            } catch (e) { alert("上传失败"); }
+            finally { btn.innerText = "上传并固化"; btn.disabled = false; }
         }
 
+        // --- 核心修改：主题切换即时刷新 ---
         async function handleConvert() {
             const text = document.getElementById('inputText').value;
             const theme = document.getElementById('themeSelect').value;
             if(!text) return;
             
-            const res = await fetch('/api/convert', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ text, theme })
-            });
-            const data = await res.json();
-
-            if (data.title) {
-                const titleInput = document.getElementById('articleTitle');
-                if (titleInput) titleInput.value = data.title;
-            }
-            
-            currentHtml = data.html;
-            currentDigest = data.digest; 
-            
             const preview = document.getElementById('previewArea');
-            preview.innerHTML = currentHtml;
-            // 同步预览区域的背景色，让预览更真实
-            const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
-            const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
-            if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
-            // 自动滚动到预览区域顶部，方便查看
-            preview.scrollTop = 0;
-            document.getElementById('uploadBtn').disabled = false;
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            // 按钮状态反馈
+            uploadBtn.innerText = "正在转换主题...";
+
+            try {
+                const res = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text, theme })
+                });
+                const data = await res.json();
+
+                if (data.title) {
+                    document.getElementById('articleTitle').value = data.title;
+                }
+                
+                currentHtml = data.html;
+                currentDigest = data.digest;
+                
+                preview.innerHTML = currentHtml;
+                // 背景色同步
+                const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
+                const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
+                if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
+
+                preview.scrollTop = 0;
+                uploadBtn.disabled = false;
+                uploadBtn.innerText = "发送至公众号草稿箱";
+            } catch (e) {
+                alert("转换失败");
+            }
         }
 
         async function handleUpload() {
             const title = document.getElementById('articleTitle').value;
-            if(!title) return alert("请先输入文章标题");
+            if(!title) return alert("请输入标题");
             
             const btn = document.getElementById('uploadBtn');
             const originalText = btn.innerText;
             btn.innerText = "正在同步至微信...";
             btn.disabled = true;
 
-            // 这里优先取本地 localStorage 中的最新 ID
             const fixedThumbId = localStorage.getItem("fixed_thumb_media_id");
-
             try {
                 const res = await fetch('/api/upload', {
                     method: 'POST',
@@ -265,17 +245,10 @@
                     })
                 });
                 const result = await res.json();
-                if(result.success) {
-                    alert("同步成功！请前往公众号后台查看。");
-                } else {
-                    alert("同步失败: " + result.error);
-                }
-            } catch (e) {
-                alert("请求出错: " + e.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+                if(result.success) alert("同步成功！");
+                else alert("同步失败: " + result.error);
+            } catch (e) { alert("错误: " + e.message); }
+            finally { btn.innerText = originalText; btn.disabled = false; }
         }
     </script>
 </body>
