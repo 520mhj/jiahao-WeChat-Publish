@@ -2,11 +2,11 @@ import { marked } from 'marked';
 
 // 全套 7 款主题样式仓库 (已修复标题与表格之间的巨大留白 Bug)
 const THEMES = {
-    "default": { // 典雅紫
+    "default": { // 典雅紫 (refined editorial purple)
         section: 'padding: 0 10px; background-color: transparent; background-image: linear-gradient(90deg, rgba(50, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0) 6.76%), linear-gradient(360deg, rgba(50, 0, 0, 0.05) 0%, rgba(249, 247, 252, 0) 9.46%); background-repeat: repeat, repeat; background-size: 20px 20px, 20px 20px; background-position: left top, left top; color: #595959; font-family: Optima, "Microsoft YaHei", PingFangSC-Regular, serif; font-size: 16px; line-height: 1.5em; letter-spacing: 0; word-spacing: 0; word-break: break-word; overflow-wrap: break-word; text-align: left;',
         h1: 'display: block; margin: 30px 0 15px; font-size: 24px; color: #595959; line-height: 1.5em; letter-spacing: 0; text-align: left; font-weight: 700;',
         h2: 'display: block; margin: 30px 0 15px; text-align: left; color: #595959; font-size: 18px; line-height: 1.8em; letter-spacing: 0; font-weight: 700; padding-left: 10px; border-left: 5px solid #dec6fb;',
-        h3: 'display: table; margin: 30px auto 8px; text-align: center; color: #595959; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #dec6fb;',
+        h3: 'display: table; margin: 30px auto 15px; text-align: center; color: #595959; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #dec6fb;',
         h4: 'margin: 24px 0 12px; font-size: 16px; line-height: 1.6em; color: #595959; font-weight: 700;',
         p: 'color: #595959; font-size: 15px; line-height: 1.8em; letter-spacing: 0.02em; text-align: left; text-indent: 0; margin: 0; padding: 8px 0;',
         ul: 'margin: 8px 0; padding: 0 0 0 25px; color: #000; list-style-type: circle;',
@@ -21,15 +21,15 @@ const THEMES = {
         inlineCode: 'color: #916dd5; background: rgba(27, 31, 35, 0.05); margin: 0 2px; padding: 2px 4px; border-radius: 4px; font-family: "Operator Mono", Consolas, Monaco, Menlo, monospace; word-break: break-all;',
         pre: 'background: #282c34; border-radius: 6px; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, "Courier New", monospace; font-size: 13px; line-height: 1.6; color: #abb2bf; margin: 0;',
         img: 'display: block; max-width: 100%; border-radius: 6px; margin: 20px auto; object-fit: contain;',
-        table: 'width: 100%; border-collapse: collapse; margin: 4px 0 14px;',
+        table: 'width: 100%; border-collapse: collapse; margin: 14px 0;',
         th: 'font-size: 14px; color: #595959; border: 1px solid #dec6fb; padding: 8px 10px; background: rgba(222, 198, 251, 0.22); font-weight: 700;',
         td: 'font-size: 14px; color: #595959; border: 1px solid #dec6fb; padding: 8px 10px;'
     },
-    "apple": { // 极简科技
+    "apple": { // 极简科技 (Apple Tech)
         section: 'padding: 10px 5px; background: #FFFFFF; color: #333333; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.8; letter-spacing: 0.5px;',
         h1: 'display: block; font-size: 26px; font-weight: 700; color: #1d1d1f; margin: 1.8em 0 0.8em 0; letter-spacing: -0.5px;',
         h2: 'display: block; font-size: 20px; font-weight: 600; color: #1d1d1f; margin: 1.6em 0 0.8em 0; letter-spacing: -0.3px;',
-        h3: 'font-size: 17px; font-weight: 600; color: #1d1d1f; margin: 1.4em 0 0.3em 0;',
+        h3: 'font-size: 17px; font-weight: 600; color: #1d1d1f; margin: 1.4em 0 0.6em 0;',
         h4: 'font-size: 16px; font-weight: 600; color: #1d1d1f; margin: 1.2em 0 0.6em 0;',
         p: 'color: #333333; margin: 1.2em 0; line-height: 1.8; font-size: 15px; font-weight: 400;',
         ul: 'font-size: 15px; color: #333333; padding-left: 20px; margin: 1em 0;',
@@ -44,15 +44,15 @@ const THEMES = {
         inlineCode: 'font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13.5px; color: #eb4d4b; background: rgba(245, 245, 247, 0.8); padding: 2px 6px; border-radius: 4px;',
         pre: 'background: #1d1d1f; border-radius: 12px; padding: 38px 16px 16px 16px; margin: 1.5em 0; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; line-height: 1.6; position: relative; background-image: radial-gradient(circle at 18px 20px, #ff5f56 5px, transparent 5.5px), radial-gradient(circle at 36px 20px, #ffbd2e 5px, transparent 5.5px), radial-gradient(circle at 54px 20px, #27c93f 5px, transparent 5.5px); background-repeat: no-repeat; color: #f5f5f7;',
         img: 'border-radius: 12px; max-width: 100%; margin: 1.5em auto; display: block;',
-        table: 'width: 100%; border-collapse: collapse; margin: 0.3em 0 1.5em;',
+        table: 'width: 100%; border-collapse: collapse; margin: 1.5em 0;',
         th: 'background: #F5F5F7; color: #1d1d1f; font-weight: 600; padding: 10px; border: 1px solid #d2d2d7;',
         td: 'padding: 10px; color: #333333; border: 1px solid #d2d2d7;'
     },
-    "notion": { // 优雅手帐
+    "notion": { // 优雅手帐 (Notion Elegance)
         section: 'padding: 15px 10px; background: #FFFCF8; color: #37352F; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif; font-size: 16px; line-height: 1.7;',
         h1: 'display: block; font-size: 30px; font-weight: 700; color: #37352F; margin: 1.2em 0 0.5em 0;',
         h2: 'display: inline-block; font-size: 24px; font-weight: 700; color: #37352F; margin: 1.5em 0 0.5em 0; position: relative; background: linear-gradient(180deg, transparent 65%, rgba(255, 212, 0, 0.4) 65%); padding: 0 4px;',
-        h3: 'font-size: 20px; font-weight: 600; color: #37352F; margin: 1.2em 0 0.3em 0;',
+        h3: 'font-size: 20px; font-weight: 600; color: #37352F; margin: 1.2em 0 0.5em 0;',
         h4: 'font-size: 18px; font-weight: 600; color: #37352F; margin: 1em 0 0.4em 0;',
         p: 'color: #37352F; margin: 0.8em 0; line-height: 1.7;',
         ul: 'color: #37352F; padding-left: 28px; margin: 0.8em 0;',
@@ -67,15 +67,15 @@ const THEMES = {
         inlineCode: 'color: #EB5757; background: rgba(135, 131, 120, 0.15); padding: 2px 4px; border-radius: 3px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace; font-size: 85%;',
         pre: 'background: #F7F6F3; border-radius: 4px; padding: 16px 20px; margin: 1.2em 0; overflow-x: auto; font-family: "SFMono-Regular", Consolas, Menlo, Courier, monospace; font-size: 14px; line-height: 1.5; border: 1px solid rgba(223, 225, 228, 0.5); color: #37352F;',
         img: 'border-radius: 4px; max-width: 100%; margin: 1.2em auto; display: block;',
-        table: 'width: 100%; border-collapse: collapse; margin: 0.3em 0 1.2em;',
+        table: 'width: 100%; border-collapse: collapse; margin: 1.2em 0;',
         th: 'background: #F7F6F3; color: #37352F; font-weight: 600; text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(55, 53, 47, 0.16);',
         td: 'padding: 8px 12px; color: #37352F; border-bottom: 1px solid rgba(55, 53, 47, 0.09);'
     },
-    "vibrant": { // 炫彩毛玻璃
+    "vibrant": { // 炫彩毛玻璃 (Vibrant Glassmorphism)
         section: 'padding: 16px 10px; background: #FAFAFB; color: #334155; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 15px; line-height: 1.8; letter-spacing: 0.5px;',
         h1: 'font-size: 28px; font-weight: 800; margin: 1.6em 0 1em 0; text-align: center; color: #7C3AED; background: linear-gradient(135deg, #7C3AED, #3B82F6); -webkit-background-clip: text;',
         h2: 'display: block; font-size: 20px; font-weight: 700; color: #1E293B; margin: 2em 0 1em 0; border-left: 6px solid #7C3AED; padding-left: 12px; border-radius: 4px;',
-        h3: 'font-size: 18px; font-weight: 600; color: #334155; margin: 1.4em 0 0.3em 0;',
+        h3: 'font-size: 18px; font-weight: 600; color: #334155; margin: 1.4em 0 0.8em 0;',
         h4: 'font-size: 17px; font-weight: 600; color: #334155; margin: 1.2em 0 0.6em 0;',
         p: 'color: #334155; margin: 1.2em 0; line-height: 1.8;',
         ul: 'color: #475569; padding-left: 20px; margin: 1em 0;',
@@ -90,15 +90,15 @@ const THEMES = {
         inlineCode: 'color: #EC4899; font-family: "Fira Code", "Courier New", monospace; background: #FCE7F3; padding: 3px 6px; border-radius: 6px; font-size: 13.5px;',
         pre: 'background: #1E293B; border-radius: 16px; padding: 20px; margin: 1.8em 0; overflow-x: auto; font-family: "Fira Code", Consolas, monospace; font-size: 13.5px; line-height: 1.6; box-shadow: 0 10px 15px -3px rgba(30, 41, 59, 0.3); color: #E2E8F0;',
         img: 'border-radius: 16px; max-width: 100%; margin: 1.8em auto; display: block; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.1);',
-        table: 'width: 100%; border-collapse: separate; border-spacing: 0; margin: 0.3em 0 1.5em; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);',
+        table: 'width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5em 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);',
         th: 'background: #F1F5F9; color: #1E293B; font-weight: 600; padding: 12px; text-align: left;',
         td: 'padding: 12px; color: #475569; background: #FFFFFF; border-top: 1px solid #F1F5F9;'
     },
-    "blue": { // 学术科技
+    "blue": { // 学术科技 (Blue polished editorial tech)
         section: 'padding: 0 10px; background-color: transparent; background-image: linear-gradient(90deg, rgba(18, 79, 142, 0.05) 0%, rgba(0, 0, 0, 0) 6.76%), linear-gradient(360deg, rgba(18, 79, 142, 0.05) 0%, rgba(234, 244, 255, 0) 9.46%); background-repeat: repeat, repeat; background-size: 20px 20px, 20px 20px; background-position: left top, left top; color: #3b4b57; font-family: Optima, "Microsoft YaHei", PingFangSC-Regular, serif; font-size: 16px; line-height: 1.5em; letter-spacing: 0; word-spacing: 0; word-break: break-word; overflow-wrap: break-word; text-align: left;',
         h1: 'display: block; margin: 30px 0 15px; font-size: 24px; color: #3b4b57; line-height: 1.5em; letter-spacing: 0; text-align: left; font-weight: 700;',
         h2: 'display: block; margin: 30px 0 15px; text-align: left; color: #3b4b57; font-size: 18px; line-height: 1.8em; letter-spacing: 0; font-weight: 700; padding-left: 10px; border-left: 5px solid #8ec5ff;',
-        h3: 'display: table; margin: 30px auto 8px; text-align: center; color: #3b4b57; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #8ec5ff;',
+        h3: 'display: table; margin: 30px auto 15px; text-align: center; color: #3b4b57; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #8ec5ff;',
         h4: 'margin: 24px 0 12px; font-size: 16px; line-height: 1.6em; color: #3b4b57; font-weight: 700;',
         p: 'color: #3b4b57; font-size: 15px; line-height: 1.8em; letter-spacing: 0.02em; text-align: left; text-indent: 0; margin: 0; padding: 8px 0;',
         ul: 'margin: 8px 0; padding: 0 0 0 25px; color: #000; list-style-type: circle;',
@@ -113,15 +113,15 @@ const THEMES = {
         inlineCode: 'color: #1976d2; background: rgba(25, 118, 210, 0.10); margin: 0 2px; padding: 2px 4px; border-radius: 4px; font-family: "Operator Mono", Consolas, Monaco, Menlo, monospace; word-break: break-all;',
         pre: 'background: #17304f; border-radius: 6px; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, "Courier New", monospace; font-size: 13px; line-height: 1.6; color: #c9e4ff;',
         img: 'display: block; max-width: 100%; border-radius: 6px; margin: 20px auto; object-fit: contain;',
-        table: 'width: 100%; border-collapse: collapse; margin: 4px 0 14px;',
+        table: 'width: 100%; border-collapse: collapse; margin: 14px 0;',
         th: 'font-size: 14px; color: #3b4b57; border: 1px solid #b8dafc; padding: 8px 10px; background: rgba(142, 197, 255, 0.18); font-weight: 700;',
         td: 'font-size: 14px; color: #3b4b57; border: 1px solid #b8dafc; padding: 8px 10px;'
     },
-    "green": { // 清新森林
+    "green": { // 清新森林 (Green calm editorial botanical)
         section: 'padding: 0 10px; background-color: transparent; background-image: linear-gradient(90deg, rgba(24, 86, 54, 0.05) 0%, rgba(0, 0, 0, 0) 6.76%), linear-gradient(360deg, rgba(24, 86, 54, 0.05) 0%, rgba(237, 248, 241, 0) 9.46%); background-repeat: repeat, repeat; background-size: 20px 20px, 20px 20px; background-position: left top, left top; color: #40504a; font-family: Optima, "Microsoft YaHei", PingFangSC-Regular, serif; font-size: 16px; line-height: 1.5em; letter-spacing: 0; word-spacing: 0; word-break: break-word; overflow-wrap: break-word; text-align: left;',
         h1: 'display: block; margin: 30px 0 15px; font-size: 24px; color: #40504a; line-height: 1.5em; letter-spacing: 0; text-align: left; font-weight: 700;',
         h2: 'display: block; margin: 30px 0 15px; text-align: left; color: #40504a; font-size: 18px; line-height: 1.8em; letter-spacing: 0; font-weight: 700; padding-left: 10px; border-left: 5px solid #9ad8b7;',
-        h3: 'display: table; margin: 30px auto 8px; text-align: center; color: #40504a; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #9ad8b7;',
+        h3: 'display: table; margin: 30px auto 15px; text-align: center; color: #40504a; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #9ad8b7;',
         h4: 'margin: 24px 0 12px; font-size: 16px; line-height: 1.6em; color: #40504a; font-weight: 700;',
         p: 'color: #40504a; font-size: 15px; line-height: 1.8em; letter-spacing: 0.02em; text-align: left; text-indent: 0; margin: 0; padding: 8px 0;',
         ul: 'margin: 8px 0; padding: 0 0 0 25px; color: #000; list-style-type: circle;',
@@ -136,15 +136,15 @@ const THEMES = {
         inlineCode: 'color: #2f8f5b; background: rgba(47, 143, 91, 0.10); margin: 0 2px; padding: 2px 4px; border-radius: 4px; font-family: "Operator Mono", Consolas, Monaco, Menlo, monospace; word-break: break-all;',
         pre: 'background: #24332e; border-radius: 6px; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, "Courier New", monospace; font-size: 13px; line-height: 1.6; color: #c2efd3;',
         img: 'display: block; max-width: 100%; border-radius: 6px; margin: 20px auto; object-fit: contain;',
-        table: 'width: 100%; border-collapse: collapse; margin: 4px 0 14px;',
+        table: 'width: 100%; border-collapse: collapse; margin: 14px 0;',
         th: 'font-size: 14px; color: #40504a; border: 1px solid #bfe7cf; padding: 8px 10px; background: rgba(154, 216, 183, 0.20); font-weight: 700;',
         td: 'font-size: 14px; color: #40504a; border: 1px solid #bfe7cf; padding: 8px 10px;'
     },
-    "dark": { // 静谧深蓝
+    "dark": { // 静谧深蓝 (Dark editorial night mode)
         section: 'padding: 0 10px; background: #131922; color: #d6deea; font-family: Optima, "Microsoft YaHei", PingFangSC-Regular, serif; font-size: 16px; line-height: 1.5em; letter-spacing: 0; word-spacing: 0; word-break: break-word; overflow-wrap: break-word; text-align: left;',
         h1: 'display: block; margin: 30px 0 15px; font-size: 24px; color: #f3f7fb; line-height: 1.5em; letter-spacing: 0; text-align: left; font-weight: 700;',
         h2: 'display: block; margin: 30px 0 15px; text-align: left; color: #eef4fb; font-size: 18px; line-height: 1.8em; letter-spacing: 0; font-weight: 700; padding-left: 10px; border-left: 5px solid #4da3ff;',
-        h3: 'display: table; margin: 30px auto 8px; text-align: center; color: #e6eef8; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #4da3ff;',
+        h3: 'display: table; margin: 30px auto 15px; text-align: center; color: #e6eef8; font-size: 17px; line-height: 1.5em; letter-spacing: 0; font-weight: 700; border-bottom: 2px solid #4da3ff;',
         h4: 'margin: 24px 0 12px; font-size: 16px; line-height: 1.6em; color: #e6eef8; font-weight: 700;',
         p: 'color: #d6deea; font-size: 15px; line-height: 1.8em; letter-spacing: 0.02em; text-align: left; text-indent: 0; margin: 0; padding: 8px 0;',
         ul: 'margin: 8px 0; padding: 0 0 0 25px; color: #f4f7fb; list-style-type: circle;',
@@ -159,7 +159,7 @@ const THEMES = {
         inlineCode: 'color: #e8f4ff; background: rgba(120, 183, 255, 0.16); margin: 0 2px; padding: 2px 4px; border-radius: 4px; font-family: "Operator Mono", Consolas, Monaco, Menlo, monospace; word-break: break-all;',
         pre: 'background: #0f141b; border-radius: 6px; padding: 15px; overflow-x: auto; font-family: Consolas, Monaco, "Courier New", monospace; font-size: 13px; line-height: 1.6; border: 1px solid #2f3b4d; color: #dbeafe;',
         img: 'display: block; max-width: 100%; border-radius: 6px; margin: 20px auto; object-fit: contain; border: 1px solid #2f3b4d;',
-        table: 'width: 100%; border-collapse: collapse; margin: 4px 0 14px;',
+        table: 'width: 100%; border-collapse: collapse; margin: 14px 0;',
         th: 'font-size: 14px; color: #d6deea; border: 1px solid #2f3b4d; padding: 8px 10px; background: rgba(77, 163, 255, 0.16); font-weight: 700; color: #eef4fb;',
         td: 'font-size: 14px; color: #d6deea; border: 1px solid #2f3b4d; padding: 8px 10px;'
     }
@@ -220,6 +220,23 @@ export async function onRequestPost(context) {
 
         // 移除被榨干后完全空白的列表项
         html = html.replace(/<li><\/li>/g, '');
+
+        // === 👇 新增：第三步：参考列表的解决思路，粉碎标题与表格之间的隐藏换行和空标签 ===
+        
+        // 1. 暴力榨干所有标题与表格之间的纯换行符 (\n) 和空格
+        html = html.replace(/<\/h1>\s+<table/g, '</h1><table');
+        html = html.replace(/<\/h2>\s+<table/g, '</h2><table');
+        html = html.replace(/<\/h3>\s+<table/g, '</h3><table');
+        html = html.replace(/<\/h4>\s+<table/g, '</h4><table');
+        
+        // 顺手榨干普通段落与表格之间的换行符
+        html = html.replace(/<\/p>\s+<table/g, '</p><table'); 
+
+        // 2. 终极防御：如果 marked.js 已经把换行错认为成了空段落，连根拔起
+        html = html.replace(/<\/h([1-6])>\s*(?:<p>\s*<\/p>\s*|<p><br\s*\/?>\s*<\/p>\s*)+<table/g, '</h$1><table');
+        html = html.replace(/<\/p>\s*(?:<p>\s*<\/p>\s*|<p><br\s*\/?>\s*<\/p>\s*)+<table/g, '</p><table');
+        
+        // === 👆 新增结束 ===
 
         // --- 5. 全要素精准注入行内样式 ---
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
