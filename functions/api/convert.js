@@ -221,21 +221,16 @@ export async function onRequestPost(context) {
         // 移除被榨干后完全空白的列表项
         html = html.replace(/<li><\/li>/g, '');
 
-        // === 👇 新增：第三步：参考列表的解决思路，粉碎标题与表格之间的隐藏换行和空标签 ===
-        
-        // 1. 暴力榨干所有标题与表格之间的纯换行符 (\n) 和空格
-        html = html.replace(/<\/h1>\s+<table/g, '</h1><table');
-        html = html.replace(/<\/h2>\s+<table/g, '</h2><table');
-        html = html.replace(/<\/h3>\s+<table/g, '</h3><table');
-        html = html.replace(/<\/h4>\s+<table/g, '</h4><table');
-        
-        // 顺手榨干普通段落与表格之间的换行符
-        html = html.replace(/<\/p>\s+<table/g, '</p><table'); 
+// === 👇 修改这里：第三步：幽灵空白彻底粉碎（真空压缩版） ===
+        // 1. 斩杀所有纯空段落 (无论里面藏了多少个空格和换行)
+        html = html.replace(/<p>[\s\n]*<\/p>/g, '');
+        html = html.replace(/<p>[\s\n]*<br\s*\/?>[\s\n]*<\/p>/g, '');
 
-        // 2. 终极防御：如果 marked.js 已经把换行错认为成了空段落，连根拔起
-        html = html.replace(/<\/h([1-6])>\s*(?:<p>\s*<\/p>\s*|<p><br\s*\/?>\s*<\/p>\s*)+<table/g, '</h$1><table');
-        html = html.replace(/<\/p>\s*(?:<p>\s*<\/p>\s*|<p><br\s*\/?>\s*<\/p>\s*)+<table/g, '</p><table');
-        
+        // 2. 终极核武器：剥离所有“块级标签”之间的多余换行与空格！
+        // 保护了行内文字的正常空格，但会把 </h3>\n<table> 强行吸附成 </h3><table>
+        html = html.replace(/<\/(h[1-6]|p|div|ul|ol|li|table|thead|tbody|tr)>[\s\n]+<(h[1-6]|p|div|ul|ol|li|table|thead|tbody|tr|blockquote)/gi, '</$1><$2');
+        // 连跑两次，确保连续嵌套的标签（如 </table>\n<p> 等）之间的换行也被彻底榨干
+        html = html.replace(/<\/(h[1-6]|p|div|ul|ol|li|table|thead|tbody|tr)>[\s\n]+<(h[1-6]|p|div|ul|ol|li|table|thead|tbody|tr|blockquote)/gi, '</$1><$2');
         // === 👆 新增结束 ===
 
         // --- 5. 全要素精准注入行内样式 ---
