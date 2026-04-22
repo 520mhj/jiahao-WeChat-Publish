@@ -234,26 +234,26 @@ export async function onRequestPost(context) {
         // === 👆 新增结束 ===
 
         // --- 5. 全要素精准注入行内样式 ---
-        html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
-        html = html.replace(/<h2/g, `<h2 style="${config.h2}"`);
-        html = html.replace(/<h3/g, `<h3 style="${config.h3}"`);
-        html = html.replace(/<h4/g, `<h4 style="${config.h4}"`);
-        html = html.replace(/<p/g, `<p style="${config.p}"`);
-        html = html.replace(/<ul/g, `<ul style="${config.ul}"`);
-        html = html.replace(/<ol/g, `<ol style="${config.ol}"`);
-        html = html.replace(/<li/g, `<li style="${config.li}"`);
-        html = html.replace(/<blockquote/g, `<blockquote style="${config.blockquote}"`);
-        html = html.replace(/<strong/g, `<strong style="${config.strong}"`);
-        html = html.replace(/<em/g, `<em style="${config.em}"`);
-        html = html.replace(/<a/g, `<a style="${config.a}"`);
-        html = html.replace(/<del/g, `<del style="${config.del}"`);
+        html = html.replace(/<h1\b/g, `<h1 style="${config.h1}"`);
+        html = html.replace(/<h2\b/g, `<h2 style="${config.h2}"`);
+        html = html.replace(/<h3\b/g, `<h3 style="${config.h3}"`);
+        html = html.replace(/<h4\b/g, `<h4 style="${config.h4}"`);
+        html = html.replace(/<p\b/g, `<p style="${config.p}"`);
+        html = html.replace(/<ul\b/g, `<ul style="${config.ul}"`);
+        html = html.replace(/<ol\b/g, `<ol style="${config.ol}"`);
+        html = html.replace(/<li\b/g, `<li style="${config.li}"`);
+        html = html.replace(/<blockquote\b/g, `<blockquote style="${config.blockquote}"`);
+        html = html.replace(/<strong\b/g, `<strong style="${config.strong}"`);
+        html = html.replace(/<em\b/g, `<em style="${config.em}"`);
+        html = html.replace(/<a\b/g, `<a style="${config.a}"`);
+        html = html.replace(/<del\b/g, `<del style="${config.del}"`);
         html = html.replace(/<hr\s*\/?>/g, `<hr style="${config.hr}" />`);
-        html = html.replace(/<code/g, `<code style="${config.inlineCode}"`);
-        html = html.replace(/<pre/g, `<pre style="${config.pre}"`);
-        html = html.replace(/<img/g, `<img style="${config.img}"`);
-        html = html.replace(/<table/g, `<table style="${config.table}"`);
-        html = html.replace(/<th/g, `<th style="${config.th}"`);
-        html = html.replace(/<td/g, `<td style="${config.td}"`);
+        html = html.replace(/<code\b/g, `<code style="${config.inlineCode}"`);
+        html = html.replace(/<pre\b/g, `<pre style="${config.pre}"`);
+        html = html.replace(/<img\b/g, `<img style="${config.img}"`);
+        html = html.replace(/<table\b/g, `<table style="${config.table}"`);
+        html = html.replace(/<th\b/g, `<th style="${config.th}"`);
+        html = html.replace(/<td\b/g, `<td style="${config.td}"`);
 
         const finalHtml = `<section id="MdWechat" style="${config.section}">${html}</section>`;
 
