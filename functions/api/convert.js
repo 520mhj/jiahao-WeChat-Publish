@@ -176,7 +176,7 @@ export async function onRequestPost(context) {
         let digest = segment.substring(0, 120);
 
         // --- 2. 文本清洗与精准替换 ---
-        //text = text.replace(/\[cite_start\]/g, "");
+        text = text.replace(/\[cite_start\]/g, "");
         // 精准匹配 并清除，防语法报错的终极写法
         text = text.replace(/\[cite.*\]/g, "");
 
