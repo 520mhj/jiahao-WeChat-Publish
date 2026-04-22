@@ -220,15 +220,20 @@ export async function onRequestPost(context) {
 
         // 移除被榨干后完全空白的列表项
         html = html.replace(/<li><\/li>/g, '');
+        
+        // === 👇 新增：第三步：幽灵空白彻底粉碎 ===
+        // 1. 斩杀所有纯空段落和只包含换行的段落
+        html = html.replace(/<p>\s*<\/p>/g, '');
+        html = html.replace(/<p><br\s*\/?><\/p>/g, '');
+        // 2. 暴力吸附：强制消除 <h3> 等标题标签与紧跟其后的 <table> 之间的所有隐藏换行和空格
+        html = html.replace(/<\/h3>\s*<table/g, '</h3><table');
+        html = html.replace(/<\/h2>\s*<table/g, '</h2><table');
+        // === 👆 新增结束 ===
 
         // --- 5. 全要素精准注入行内样式 ---
         html = html.replace(/<h1/g, `<h1 style="${config.h1}"`);
         html = html.replace(/<h2/g, `<h2 style="${config.h2}"`);
         html = html.replace(/<h3/g, `<h3 style="${config.h3}"`);
-
-        // 新增：在所有三级标题的闭合标签后强制加一个换行
-        html = html.replace(/<\/h3>/g, '</h3><br/>');
-        
         html = html.replace(/<h4/g, `<h4 style="${config.h4}"`);
         html = html.replace(/<p/g, `<p style="${config.p}"`);
         html = html.replace(/<ul/g, `<ul style="${config.ul}"`);
