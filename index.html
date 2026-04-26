@@ -213,8 +213,61 @@
                 const data = await res.json();
                 document.getElementById('authModal').classList.remove('cloak');
                 if (data.code === 'SETUP_REQUIRED') isSetupMode = true;
-            } else { initSystem(); }
+            } else { 
+                initSystem();
+                const inputText = document.getElementById('inputText');
+    
+                // 监听粘贴事件
+                inputText.addEventListener('paste', async (e) => {
+                    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                    for (let item of items) {
+                        if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        e.preventDefault(); // 阻止默认粘贴文本行为
+                        const file = item.getAsFile();
+                        await uploadAndInsertImage(file);
+                        break; 
+                        }
+                    }
+                });
+            }
         });
+
+        // 处理图片上传并插入编辑器
+async function uploadAndInsertImage(file) {
+    const textarea = document.getElementById('inputText');
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+
+    // 1. 插入上传中占位符
+    const placeholder = `\n![正在上传图片...]()\n`;
+    textarea.value = textarea.value.substring(0, startPos) + placeholder + textarea.value.substring(endPos);
+    
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // 2. 调用咱们刚写的后端代理
+        const res = await fetch('/api/upload_kvault', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // 3. 上传成功，将占位符替换为真实的 Markdown 图片语法
+            const imageMarkdown = `\n![图片](${data.url})\n`;
+            textarea.value = textarea.value.replace(placeholder, imageMarkdown);
+            // 4. 立即触发一次转换预览
+            handleConvert();
+        } else {
+            alert("图床上传失败: " + data.error);
+            textarea.value = textarea.value.replace(placeholder, "");
+        }
+    } catch (err) {
+        alert("上传出错");
+        textarea.value = textarea.value.replace(placeholder, "");
+    }
+}
 
         async function handleAuth() {
             const pwd = document.getElementById('authPassword').value;
