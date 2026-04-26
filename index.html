@@ -60,7 +60,11 @@
             <div class="apple-glass p-3 rounded-2xl border border-white/40 shadow-sm flex items-center gap-4">
                 <div id="coverPreviewContainer" class="cloak flex items-center gap-2">
                     <img id="coverPreviewImg" src="" class="w-10 h-10 object-cover rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openFullscreenCover()">
-                    <div class="h-6 w-[1px] bg-gray-200"></div>
+        
+                    <select id="coverSelect" onchange="changeCover()" class="text-xs border border-gray-200 rounded-md py-1 px-2 bg-white max-w-[120px] focus:outline-none focus:border-blue-500 cursor-pointer">
+                    </select>
+        
+                    <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="file" id="coverFileInput" accept="image/*" class="hidden">
