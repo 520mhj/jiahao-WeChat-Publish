@@ -171,9 +171,12 @@ export async function onRequestPost(context) {
         const config = THEMES[theme] || THEMES.default;
 
         // --- 1. 动态提取“核心金句”作为摘要 ---
-        const zhaiyao = text.split("**纸页虾点评：** ")[1];
+        const zhaiyao = text.split(`虾选金句
+
+> `)[1];
         const segment = zhaiyao ? zhaiyao.split('\n')[0] : "";
-        let digest = segment.substring(0, 120);
+        const str = segment.replace(/\**/g,'').trim();
+        let digest = str.substring(0, 120);
 
         // --- 2. 文本清洗与精准替换 ---
         text = text.replace(/\[cite_start\]/g, "");
