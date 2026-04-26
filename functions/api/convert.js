@@ -174,14 +174,14 @@ export async function onRequestPost(context) {
         const zhaiyao = text.split(`虾选金句
 
 > `)[1];
-        const segment = zhaiyao ? zhaiyao.split('\n')[0] : "";
+        const segment = zhaiyao ? zhaiyao.split('\n')[0] : '';
         const str = segment.replace(/\**/g,'').trim();
         let digest = str.substring(0, 120);
 
-        // --- 2. 文本清洗与精准替换 ---
-        text = text.replace(/\[cite_start\]/g, "");
+        // --- 2. 文本清洗与精准替换 [cite: 205][cite_start] ---
+        text = text.replace(/\[(?:cite_start|cite:.*?)\]/g, '');
         // 精准匹配 并清除，防语法报错的终极写法
-        text = text.replace(/\[cite.*\]/g, "");
+        text = text.replace(/ ?(?=，|。)/g, '');
 
         // --- 3. 完美标题提取法：“物理截胡”（兼容版） ---
         let lines = text.split('\n');
