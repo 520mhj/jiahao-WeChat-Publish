@@ -60,10 +60,14 @@
             <div class="apple-glass p-3 rounded-2xl border border-white/40 shadow-sm flex items-center gap-4">
                 <div id="coverPreviewContainer" class="cloak flex items-center gap-2">
                     <img id="coverPreviewImg" src="" class="w-10 h-10 object-cover rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openFullscreenCover()">
-        
-                    <select id="coverSelect" onchange="changeCover()" class="text-xs border border-gray-200 rounded-md py-1 px-2 bg-white max-w-[120px] focus:outline-none focus:border-blue-500 cursor-pointer">
+    
+                    <select id="coverSelect" onchange="changeCover()" class="text-[11px] border border-gray-200 rounded-lg py-1 px-2 bg-white max-w-[100px] focus:outline-none focus:ring-1 focus:ring-blue-500">
                     </select>
-        
+    
+                    <button onclick="handleDeleteCover()" class="text-gray-400 hover:text-red-500 transition-colors p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+
                     <div class="h-6 w-[1px] bg-gray-200 mx-1"></div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -145,15 +149,17 @@
                 }
             };
 
+            // 修改：图片上传完成后，强制将最新上传的 ID 作为当前选择
             xhr.onload = async () => {
                 if (xhr.status === 200) {
-                    const result = JSON.parse(xhr.responseText);
-                    if (result.success) {
-                        await initSystem(); // 刷新 KV 状态
-                        alert("封面上传并存入 KV 成功！");
-                    }
+                const result = JSON.parse(xhr.responseText);
+                if (result.success) {
+                    localStorage.setItem("fixed_thumb_media_id", result.media_id);
+                    await initSystem();
+                    alert("封面上传并固化成功！");
+                }
                 } else { alert("失败: " + xhr.statusText); }
-                overlay.classList.add('cloak'); // 解锁页面
+                    overlay.classList.add('cloak');
             };
 
             xhr.onerror = () => {
@@ -221,15 +227,79 @@
             else alert("验证失败");
         }
 
-        async function initSystem() {
-            document.getElementById('mainApp').classList.remove('cloak');
-            const res = await fetch('/api/cover');
-            const data = await res.json();
-            if (data.success && data.media_id) {
-                localStorage.setItem("fixed_thumb_media_id", data.media_id);
-                document.getElementById('coverPreviewImg').src = '/api/cover_image?t=' + Date.now();
-                document.getElementById('coverPreviewContainer').classList.remove('cloak');
-            }
+// 修改：初始化时加载列表并设置选中项
+async function initSystem() {
+    document.getElementById('mainApp').classList.remove('cloak');
+    const res = await fetch('/api/cover');
+    const data = await res.json();
+    
+    const container = document.getElementById('coverPreviewContainer');
+    const select = document.getElementById('coverSelect');
+    
+    if (data.success && data.list && data.list.length > 0) {
+        select.innerHTML = '';
+        data.list.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.text = item.name.length > 8 ? item.name.substring(0,8)+'..' : item.name;
+            select.appendChild(opt);
+        });
+
+        // 确定应该选中哪个
+        let activeId = localStorage.getItem("fixed_thumb_media_id") || data.media_id || data.list[data.list.length-1].id;
+        select.value = activeId;
+        
+        container.classList.remove('cloak');
+        updateCoverPreview(activeId);
+    } else {
+        container.classList.add('cloak');
+    }
+}
+
+// 新增：切换封面逻辑
+function changeCover() {
+    const id = document.getElementById('coverSelect').value;
+    updateCoverPreview(id);
+}
+
+// 抽离：更新预览图和本地存储
+function updateCoverPreview(id) {
+    localStorage.setItem("fixed_thumb_media_id", id);
+    document.getElementById('coverPreviewImg').src = `/api/cover_image?id=${id}&t=${Date.now()}`;
+}
+
+// 新增：删除封面逻辑
+async function handleDeleteCover() {
+    const id = document.getElementById('coverSelect').value;
+    if (!id || !confirm("确定要删除这张封面吗？此操作不可撤销。")) return;
+
+    try {
+        const res = await fetch('/api/delete_cover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ media_id: id })
+        });
+        const result = await res.json();
+        if (result.success) {
+            localStorage.removeItem("fixed_thumb_media_id"); // 清除本地缓存强制重新初始化
+            await initSystem();
+        } else {
+            alert("删除失败: " + result.error);
+        }
+    } catch (e) { alert("网络错误"); }
+}
+
+        // 新增：切换下拉框封面时的联动函数
+        function changeCover() {
+            const select = document.getElementById('coverSelect');
+            const selectedId = select.value;
+            if (!selectedId) return;
+    
+                // 更新要发给微信的固化ID
+                localStorage.setItem("fixed_thumb_media_id", selectedId);
+    
+                // 刷新前端预览图，通过传 id 来精准拉取对应图片
+                document.getElementById('coverPreviewImg').src = `/api/cover_image?id=${selectedId}&t=` + Date.now();
         }
 
         function openFullscreenCover() {
