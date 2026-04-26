@@ -381,26 +381,74 @@ async function handleDeleteCover() {
             document.getElementById('uploadBtn').disabled = false;
         }
 
-        async function handleUpload() {
-            const title = document.getElementById('articleTitle').value;
-            const btn = document.getElementById('uploadBtn');
-            btn.innerText = "同步中...";
-            btn.disabled = true;
-            try {
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        html: currentHtml, title: title, digest: currentDigest,
-                        thumb_media_id: localStorage.getItem("fixed_thumb_media_id")
-                    })
-                });
-                const result = await res.json();
-                if(result.success) alert("同步成功！");
-                else alert("错误: " + result.error);
-            } catch (e) { alert("错误: " + e.message); }
-            finally { btn.innerText = "同步至草稿箱"; btn.disabled = false; }
+// 替换原有的 handleUpload 函数
+async function handleUpload() {
+    const title = document.getElementById('articleTitle').value;
+    const btn = document.getElementById('uploadBtn');
+    
+    // 创建一个临时的 DOM 元素来解析 HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = currentHtml;
+    const images = tempDiv.getElementsByTagName('img');
+    
+    btn.disabled = true;
+
+    try {
+        // --- 开始预处理：图片转链 ---
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i];
+            const src = img.getAttribute('src');
+            
+            // 如果已经是微信的图片了，跳过
+            if (src && src.includes('mmbiz.qpic.cn')) continue;
+
+            btn.innerText = `处理图片 (${i+1}/${images.length})...`;
+            
+            // 调用我们刚才写的转链引擎
+            const res = await fetch('/api/url_to_wechat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ external_url: src })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                // 将原 HTML 中的 src 替换为微信绿卡 url
+                img.setAttribute('src', data.wechat_url);
+            } else {
+                console.warn("图片转链失败:", src, data.error);
+                // 你可以选择在这里中断，或者继续不管它
+            }
         }
+
+        // 提取处理完毕的安全 HTML
+        const safeWechatHtml = tempDiv.innerHTML;
+
+        // --- 开始真正的草稿同步 ---
+        btn.innerText = "同步草稿箱...";
+        
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                html: safeWechatHtml, // 使用洗白后的 HTML
+                title: title, 
+                digest: currentDigest,
+                thumb_media_id: localStorage.getItem("fixed_thumb_media_id")
+            })
+        });
+        
+        const result = await res.json();
+        if(result.success) alert("同步成功！");
+        else alert("错误: " + result.error);
+
+    } catch (e) { 
+        alert("错误: " + e.message); 
+    } finally { 
+        btn.innerText = "同步至微信"; 
+        btn.disabled = false; 
+    }
+}
     </script>
 </body>
 </html>
