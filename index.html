@@ -100,14 +100,18 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 items-start mt-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 items-stretch">
             
-            <div class="bg-white rounded-[28px] shadow-sm border border-gray-200">
-                <textarea id="inputText" class="w-full min-h-[70vh] p-8 focus:outline-none resize-none text-sm leading-relaxed overflow-hidden bg-transparent" placeholder="在此输入 Markdown..." oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+            <div class="flex flex-col h-full">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
+                    <textarea id="inputText" class="flex-1 p-6 focus:outline-none resize-none text-sm leading-relaxed" style="min-height: 65vh; overflow-y: hidden;" placeholder="在此输入 Markdown..." oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                </div>
             </div>
             
-            <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 min-h-[70vh]">
-                <div id="previewArea" class="w-full h-full p-8 preview-container"></div>
+            <div class="flex flex-col h-full">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
+                    <div id="previewArea" class="flex-1 p-4 preview-container"></div>
+                </div>
             </div>
 
         </div>
