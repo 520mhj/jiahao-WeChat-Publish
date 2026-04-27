@@ -7,20 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+SC:wght@400;700&display=swap');
-        body { font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif; background-color: #f5f5f7; color: #1d1d1f; }
-        .apple-glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        body { font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif; background-color: #f5f5f7; color: #1d1d1f; scroll-behavior: smooth; }
+        .apple-glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .cloak { display: none !important; }
         .preview-container #MdWechat { all: initial; font-family: inherit; }
         /* 进度条动画 */
         .progress-transition { transition: width 0.3s ease; }
-        /* 自定义滚动条样式，让 UI 更精美 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen">
 
     <div id="uploadOverlay" class="cloak fixed inset-0 bg-white/60 backdrop-blur-xl z-[200] flex flex-col items-center justify-center">
         <div class="bg-white p-8 rounded-[32px] shadow-2xl border border-white/20 flex flex-col items-center gap-6">
@@ -33,115 +33,110 @@
                 <div id="progressText" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-blue-600">0%</div>
             </div>
             <div class="text-center">
-                <h3 id="uploadStatusText" class="text-lg font-semibold">正在压缩图片...</h3>
-                <p class="text-xs text-gray-400 mt-1">上传期间请勿关闭页面</p>
+                <h3 id="uploadStatusText" class="text-lg font-semibold">正在处理...</h3>
             </div>
         </div>
     </div>
 
-    <div id="authModal" class="cloak fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center">
+    <div id="authModal" class="cloak fixed inset-0 bg-black/30 backdrop-blur-md z-[150] flex items-center justify-center">
         <div class="bg-white/90 p-8 rounded-[24px] shadow-2xl w-[360px] text-center border border-white/20">
             <h2 id="authTitle" class="text-xl font-semibold mb-1">需要验证</h2>
-            <p id="authDesc" class="text-sm text-gray-500 mb-6">请输入您的访问密码</p>
-            <input type="password" id="authPassword" class="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:ring-2 focus:ring-blue-500 mb-4 transition-all" placeholder="密码" onkeypress="if(event.key === 'Enter') handleAuth()">
+            <input type="password" id="authPassword" class="w-full px-4 py-3 bg-gray-100 rounded-xl border-none focus:ring-2 focus:ring-blue-500 mb-4 mt-4 transition-all" placeholder="密码" onkeypress="if(event.key === 'Enter') handleAuth()">
             <button id="authBtn" onclick="handleAuth()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 active:scale-95 transition-all">进入</button>
         </div>
     </div>
 
-    <div id="imageModal" class="cloak fixed inset-0 bg-black/90 z-[110] flex items-center justify-center cursor-zoom-out" onclick="this.classList.add('cloak')">
-        <img id="modalImg" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-lg shadow-2xl">
+    <div id="imageModal" class="cloak fixed inset-0 bg-black/90 z-[160] flex items-center justify-center cursor-zoom-out" onclick="this.classList.add('cloak')">
+        <img id="modalImg" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-lg">
     </div>
 
-    <div id="mainApp" class="cloak w-full max-w-[1400px] mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col flex-1">
+    <div id="mainApp" class="cloak max-w-[1300px] mx-auto px-6">
         
-        <header class="mb-5 shrink-0 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
-                    发布精灵
-                    <a href="https://www.cloudflare-cn.com/ips/" target="_blank" class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full hover:bg-blue-100 hover:text-blue-600 transition" title="配置 Cloudflare IP 白名单">IP 配置</a>
-                </h1>
-                <p class="text-gray-500 text-xs md:text-sm mt-1">WeChat Article Publishing System</p>
-            </div>
+        <header class="py-10 text-center">
+            <h1 class="text-4xl font-extrabold tracking-tight flex items-center justify-center gap-3">
+                发布精灵
+                <a href="https://www.cloudflare-cn.com/ips/" target="_blank" class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full hover:bg-blue-100 hover:text-blue-600 transition" title="配置 Cloudflare IP 白名单">IP 配置</a>
+            </h1>
+            <p class="text-gray-500 text-sm mt-2">WeChat Article Publishing System</p>
         </header>
 
-        <div class="sticky top-2 md:top-4 z-50 mb-6 shrink-0 apple-glass p-3 md:p-4 rounded-[20px] shadow-sm border border-white shadow-lg shadow-black/5 flex flex-col xl:flex-row gap-4 items-center justify-between transition-all">
-            
-            <div class="flex w-full xl:w-1/2 gap-3 items-center">
-                <input id="articleTitle" type="text" placeholder="输入文章标题..." class="flex-1 min-w-0 px-4 py-2.5 bg-white/90 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all font-medium text-sm">
+        <div class="sticky top-0 z-50 pt-4 pb-6 bg-[#f5f5f7]/95 backdrop-blur-xl border-b border-gray-200/30">
+            <div class="apple-glass p-4 rounded-[24px] shadow-xl shadow-black/5 border border-white flex flex-col lg:flex-row gap-4 items-center justify-between">
                 
-                <select id="themeSelect" onchange="handleConvert()" class="w-32 md:w-40 px-3 py-2.5 bg-white/90 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer font-medium text-sm">
-                    <option value="default">典雅紫 (Default)</option>
-                    <option value="apple">极简科技 (Apple)</option>
-                    <option value="notion">优雅手帐 (Notion)</option>
-                    <option value="vibrant">炫彩现代 (Vibrant)</option>
-                    <option value="blue">学术科技 (Blue)</option>
-                    <option value="green">清新森林 (Green)</option>
-                    <option value="dark">静谧深蓝 (Dark)</option>
-                </select>
-            </div>
-
-            <div class="flex w-full xl:w-auto flex-wrap sm:flex-nowrap gap-3 items-center justify-between xl:justify-end">
-                
-                <div class="flex items-center gap-2 bg-white/80 p-1.5 pr-2.5 rounded-xl border border-gray-200 shadow-sm shrink-0">
-                    <div id="coverPreviewContainer" class="cloak flex items-center gap-2">
-                        <img id="coverPreviewImg" src="" class="w-8 h-8 md:w-9 md:h-9 object-cover rounded-lg cursor-pointer hover:opacity-80 transition shadow-sm border border-gray-100" onclick="openFullscreenCover()">
-                        <select id="coverSelect" onchange="changeCover()" class="text-[11px] border-none bg-transparent max-w-[70px] md:max-w-[90px] focus:outline-none cursor-pointer truncate">
-                        </select>
-                        <button onclick="handleDeleteCover()" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="删除当前封面">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                        <div class="h-5 w-[1px] bg-gray-300 mx-1"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="file" id="coverFileInput" accept="image/*" class="hidden">
-                        <button onclick="document.getElementById('coverFileInput').click()" class="text-xs font-medium text-gray-600 hover:text-black px-1 md:px-2 py-1.5 transition">选择图片</button>
-                        <button onclick="handleCoverUpload()" class="bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-800 active:scale-95 transition whitespace-nowrap">上传固化</button>
-                    </div>
+                <div class="flex w-full lg:w-1/2 gap-3 items-center">
+                    <input id="articleTitle" type="text" placeholder="输入文章标题..." class="flex-1 min-w-0 px-4 py-3 bg-white/80 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium">
+                    <select id="themeSelect" onchange="handleConvert()" class="w-40 px-3 py-3 bg-white/80 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium text-sm">
+                        <option value="default">典雅紫 (Default)</option>
+                        <option value="apple">极简科技 (Apple)</option>
+                        <option value="notion">优雅手帐 (Notion)</option>
+                        <option value="vibrant">炫彩现代 (Vibrant)</option>
+                        <option value="blue">学术科技 (Blue)</option>
+                        <option value="green">清新森林 (Green)</option>
+                        <option value="dark">静谧深蓝 (Dark)</option>
+                    </select>
                 </div>
 
-                <div class="flex gap-2 shrink-0">
-                    <button onclick="handleConvert()" class="bg-blue-600 text-white text-sm px-4 md:px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all whitespace-nowrap shadow-md shadow-blue-600/20">转换预览</button>
-                    <button id="uploadBtn" onclick="handleUpload()" disabled class="bg-emerald-600 text-white text-sm px-4 md:px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-700 active:scale-95 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all whitespace-nowrap shadow-md shadow-emerald-600/20">同步至微信</button>
+                <div class="flex w-full lg:w-auto gap-3 items-center justify-between lg:justify-end">
+                    <div class="flex items-center gap-2 bg-white/60 p-1.5 rounded-xl border border-gray-200 shrink-0">
+                        <div id="coverPreviewContainer" class="cloak flex items-center gap-2">
+                            <img id="coverPreviewImg" src="" class="w-9 h-9 object-cover rounded-lg cursor-pointer hover:opacity-80 transition shadow-sm" onclick="openFullscreenCover()">
+                            <select id="coverSelect" onchange="changeCover()" class="text-[11px] border-none bg-transparent max-w-[80px] focus:outline-none cursor-pointer">
+                            </select>
+                            <button onclick="handleDeleteCover()" class="text-gray-400 hover:text-red-500 p-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                            <div class="h-5 w-[1px] bg-gray-300 mx-1"></div>
+                        </div>
+                        <input type="file" id="coverFileInput" accept="image/*" class="hidden">
+                        <button onclick="document.getElementById('coverFileInput').click()" class="text-xs font-medium px-2 py-1.5 hover:text-blue-600 transition">选择图片</button>
+                        <button onclick="handleCoverUpload()" class="bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-800 active:scale-95 transition">上传固化</button>
+                    </div>
+
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="handleConvert()" class="bg-blue-600 text-white text-sm px-5 py-3 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-600/20">转换预览</button>
+                        <button id="uploadBtn" onclick="handleUpload()" disabled class="bg-emerald-600 text-white text-sm px-5 py-3 rounded-xl font-bold hover:bg-emerald-700 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none transition-all shadow-lg shadow-emerald-600/20">同步微信</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="flex-1 min-h-[500px] h-[calc(100vh-200px)] grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 pb-4">
-            
-            <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden relative group">
-                <div class="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
-                <textarea id="inputText" class="flex-1 w-full h-full p-6 pt-5 focus:outline-none resize-none text-sm leading-relaxed overflow-y-auto z-0" placeholder="在此输入 Markdown..."></textarea>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="flex flex-col gap-4">
+                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
+                    <textarea id="inputText" class="w-full h-full p-8 focus:outline-none resize-none text-sm leading-relaxed" placeholder="在此输入 Markdown..."></textarea>
+                </div>
             </div>
-            
-            <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden relative">
-                <div class="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
-                <div id="previewArea" class="flex-1 w-full h-full p-6 pt-5 overflow-y-auto preview-container bg-white z-0"></div>
+            <div class="flex flex-col gap-4">
+                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
+                    <div id="previewArea" class="w-full h-full overflow-y-auto p-8 preview-container"></div>
+                </div>
             </div>
-
         </div>
     </div>
+
+    <button id="backToTopBtn" onclick="scrollToTop()" class="fixed bottom-10 right-10 w-12 h-12 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.15)] border border-gray-100 text-gray-500 flex items-center justify-center rounded-full hover:bg-gray-50 hover:text-blue-600 hover:-translate-y-1 transition-all duration-300 z-[100] opacity-0 pointer-events-none translate-y-10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+    </button>
 
     <script>
         let currentHtml = "";
         let currentDigest = "";
         let isSetupMode = false;
 
+        // --- 核心：封面处理 ---
         async function handleCoverUpload() {
             const fileInput = document.getElementById('coverFileInput');
             let file = fileInput.files[0];
             if (!file) return alert("请先选择图片");
             
             const overlay = document.getElementById('uploadOverlay');
-            const statusText = document.getElementById('uploadStatusText');
             const circle = document.getElementById('progressCircle');
             const text = document.getElementById('progressText');
 
             overlay.classList.remove('cloak');
-            statusText.innerText = "正在压缩图片...";
             updateProgress(0);
 
             file = await compressImage(file);
-            statusText.innerText = "正在上传至微信素材库...";
 
             const formData = new FormData();
             formData.append('file', file);
@@ -158,33 +153,26 @@
 
             xhr.onload = async () => {
                 if (xhr.status === 200) {
-                const result = JSON.parse(xhr.responseText);
-                if (result.success) {
-                    localStorage.setItem("fixed_thumb_media_id", result.media_id);
-                    await initSystem();
-                    alert("封面上传并固化成功！");
-                }
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.success) {
+                        localStorage.setItem("fixed_thumb_media_id", result.media_id);
+                        await initSystem();
+                        alert("封面上传并固化成功！");
+                    }
                 } else { alert("失败: " + xhr.statusText); }
-                    overlay.classList.add('cloak');
-            };
-
-            xhr.onerror = () => {
-                alert("网络出错");
                 overlay.classList.add('cloak');
             };
 
+            xhr.onerror = () => { alert("网络出错"); overlay.classList.add('cloak'); };
             xhr.send(formData);
         }
 
         function updateProgress(percent) {
             const text = document.getElementById('progressText');
             const circle = document.getElementById('progressCircle');
-            const radius = 36;
-            const circumference = 2 * Math.PI * radius;
-            
+            const circumference = 226.08;
             text.innerText = percent + "%";
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
+            circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
         }
 
         async function compressImage(file) {
@@ -212,6 +200,7 @@
             });
         }
 
+        // --- 初始化与同步 ---
         document.addEventListener("DOMContentLoaded", async () => {
             const res = await fetch('/api/cover');
             if (res.status === 401) {
@@ -221,51 +210,45 @@
             } else { 
                 initSystem();
                 const inputText = document.getElementById('inputText');
-    
                 inputText.addEventListener('paste', async (e) => {
                     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                     for (let item of items) {
                         if (item.kind === 'file' && item.type.startsWith('image/')) {
-                        e.preventDefault(); 
-                        const file = item.getAsFile();
-                        await uploadAndInsertImage(file);
-                        break; 
+                            e.preventDefault();
+                            await uploadAndInsertImage(item.getAsFile());
+                            break; 
                         }
                     }
                 });
             }
+
+            // 回到顶部监听
+            const backBtn = document.getElementById('backToTopBtn');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+                    backBtn.classList.add('opacity-100', 'translate-y-0');
+                } else {
+                    backBtn.classList.remove('opacity-100', 'translate-y-0');
+                    backBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+                }
+            });
         });
 
         async function uploadAndInsertImage(file) {
             const textarea = document.getElementById('inputText');
-            const startPos = textarea.selectionStart;
-            const endPos = textarea.selectionEnd;
-
             const placeholder = `\n![正在上传图片...]()\n`;
-            textarea.value = textarea.value.substring(0, startPos) + placeholder + textarea.value.substring(endPos);
-            
+            textarea.value += placeholder;
             try {
                 const formData = new FormData();
                 formData.append('file', file);
-
-                const res = await fetch('/api/upload_kvault', {
-                    method: 'POST',
-                    body: formData
-                });
+                const res = await fetch('/api/upload_kvault', { method: 'POST', body: formData });
                 const data = await res.json();
-
                 if (data.success) {
-                    const imageMarkdown = `\n![图片](${data.url})\n`;
-                    textarea.value = textarea.value.replace(placeholder, imageMarkdown);
+                    textarea.value = textarea.value.replace(placeholder, `\n![图片](${data.url})\n`);
                     handleConvert();
-                } else {
-                    alert("图床上传失败: " + data.error);
-                    textarea.value = textarea.value.replace(placeholder, "");
                 }
-            } catch (err) {
-                alert("上传出错");
-                textarea.value = textarea.value.replace(placeholder, "");
-            }
+            } catch (err) { textarea.value = textarea.value.replace(placeholder, ""); }
         }
 
         async function handleAuth() {
@@ -283,11 +266,8 @@
             document.getElementById('mainApp').classList.remove('cloak');
             const res = await fetch('/api/cover');
             const data = await res.json();
-            
-            const container = document.getElementById('coverPreviewContainer');
             const select = document.getElementById('coverSelect');
-            
-            if (data.success && data.list && data.list.length > 0) {
+            if (data.success && data.list.length > 0) {
                 select.innerHTML = '';
                 data.list.forEach(item => {
                     const opt = document.createElement('option');
@@ -295,23 +275,16 @@
                     opt.text = item.name.length > 8 ? item.name.substring(0,8)+'..' : item.name;
                     select.appendChild(opt);
                 });
-
                 let activeId = localStorage.getItem("fixed_thumb_media_id") || data.media_id || data.list[data.list.length-1].id;
                 select.value = activeId;
-                
-                container.classList.remove('cloak');
+                document.getElementById('coverPreviewContainer').classList.remove('cloak');
                 updateCoverPreview(activeId);
-            } else {
-                container.classList.add('cloak');
             }
         }
 
         function changeCover() {
-            const select = document.getElementById('coverSelect');
-            const selectedId = select.value;
-            if (!selectedId) return;
-            localStorage.setItem("fixed_thumb_media_id", selectedId);
-            document.getElementById('coverPreviewImg').src = `/api/cover_image?id=${selectedId}&t=` + Date.now();
+            const id = document.getElementById('coverSelect').value;
+            updateCoverPreview(id);
         }
 
         function updateCoverPreview(id) {
@@ -321,22 +294,9 @@
 
         async function handleDeleteCover() {
             const id = document.getElementById('coverSelect').value;
-            if (!id || !confirm("确定要删除这张封面吗？此操作不可撤销。")) return;
-
-            try {
-                const res = await fetch('/api/delete_cover', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ media_id: id })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    localStorage.removeItem("fixed_thumb_media_id"); 
-                    await initSystem();
-                } else {
-                    alert("删除失败: " + result.error);
-                }
-            } catch (e) { alert("网络错误"); }
+            if (!id || !confirm("确定删除？")) return;
+            const res = await fetch('/api/delete_cover', { method: 'POST', body: JSON.stringify({ media_id: id }) });
+            if ((await res.json()).success) { localStorage.removeItem("fixed_thumb_media_id"); await initSystem(); }
         }
 
         function openFullscreenCover() {
@@ -344,84 +304,44 @@
             document.getElementById('imageModal').classList.remove('cloak');
         }
 
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
         async function handleConvert() {
             const text = document.getElementById('inputText').value;
             const theme = document.getElementById('themeSelect').value;
             if(!text) return;
-            const res = await fetch('/api/convert', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ text, theme })
-            });
+            const res = await fetch('/api/convert', { method: 'POST', body: JSON.stringify({ text, theme }) });
             const data = await res.json();
             if (data.title) document.getElementById('articleTitle').value = data.title;
-            currentHtml = data.html;
-            currentDigest = data.digest;
-            const preview = document.getElementById('previewArea');
-            preview.innerHTML = currentHtml;
-            const sectionStyle = preview.querySelector('section')?.getAttribute('style') || "";
-            const bgColorMatch = sectionStyle.match(/background(?:-color)?:\s*([^;]+)/);
-            if(bgColorMatch) preview.style.backgroundColor = bgColorMatch[1];
+            currentHtml = data.html; currentDigest = data.digest;
+            document.getElementById('previewArea').innerHTML = currentHtml;
             document.getElementById('uploadBtn').disabled = false;
         }
 
         async function handleUpload() {
             const title = document.getElementById('articleTitle').value;
             const btn = document.getElementById('uploadBtn');
-            
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = currentHtml;
             const images = tempDiv.getElementsByTagName('img');
-            
             btn.disabled = true;
 
             try {
                 for (let i = 0; i < images.length; i++) {
                     const img = images[i];
-                    const src = img.getAttribute('src');
-                    
-                    if (src && src.includes('mmbiz.qpic.cn')) continue;
-
-                    btn.innerText = `处理图片 (${i+1}/${images.length})...`;
-                    
-                    const res = await fetch('/api/url_to_wechat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ external_url: src })
-                    });
+                    if (img.src.includes('mmbiz.qpic.cn')) continue;
+                    btn.innerText = `处理图片 ${i+1}/${images.length}`;
+                    const res = await fetch('/api/url_to_wechat', { method: 'POST', body: JSON.stringify({ external_url: img.src }) });
                     const data = await res.json();
-                    
-                    if (data.success) {
-                        img.setAttribute('src', data.wechat_url);
-                    } else {
-                        console.warn("图片转链失败:", src, data.error);
-                    }
+                    if (data.success) img.setAttribute('src', data.wechat_url);
                 }
-
-                const safeWechatHtml = tempDiv.innerHTML;
-                btn.innerText = "同步草稿箱...";
-                
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        html: safeWechatHtml,
-                        title: title, 
-                        digest: currentDigest,
-                        thumb_media_id: localStorage.getItem("fixed_thumb_media_id")
-                    })
-                });
-                
-                const result = await res.json();
-                if(result.success) alert("同步成功！");
-                else alert("错误: " + result.error);
-
-            } catch (e) { 
-                alert("错误: " + e.message); 
-            } finally { 
-                btn.innerText = "同步至微信"; 
-                btn.disabled = false; 
-            }
+                const res = await fetch('/api/upload', { method: 'POST', body: JSON.stringify({ 
+                    html: tempDiv.innerHTML, title, digest: currentDigest, 
+                    thumb_media_id: localStorage.getItem("fixed_thumb_media_id") 
+                })});
+                if((await res.json()).success) alert("同步成功！");
+            } catch (e) { alert("出错: " + e.message); }
+            finally { btn.innerText = "同步微信"; btn.disabled = false; }
         }
     </script>
 </body>
