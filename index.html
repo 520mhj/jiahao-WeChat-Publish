@@ -101,12 +101,16 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-20">
-            <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col w-full">
-                <textarea id="inputText" class="w-full min-h-[60vh] p-6 focus:outline-none resize-none text-sm leading-relaxed overflow-hidden bg-transparent rounded-[24px]" placeholder="在此输入 Markdown..."></textarea>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="flex flex-col gap-4">
+                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
+                    <textarea id="inputText" class="w-full h-full p-8 focus:outline-none resize-none text-sm leading-relaxed" placeholder="在此输入 Markdown..."></textarea>
+                </div>
             </div>
-            <div class="bg-white rounded-[24px] shadow-sm border border-gray-200 flex flex-col w-full">
-                <div id="previewArea" class="w-full min-h-[60vh] p-6 preview-container"></div>
+            <div class="flex flex-col gap-4">
+                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
+                    <div id="previewArea" class="w-full h-full overflow-y-auto p-8 preview-container"></div>
+                </div>
             </div>
         </div>
     </div>
