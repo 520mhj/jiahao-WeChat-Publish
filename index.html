@@ -13,8 +13,8 @@
         .preview-container #MdWechat { all: initial; font-family: inherit; }
         /* 进度条动画 */
         .progress-transition { transition: width 0.3s ease; }
-        /* 自定义滚动条 */
-        ::-webkit-scrollbar { width: 6px; }
+        /* 自定义全局滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
@@ -100,17 +100,16 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <div class="flex flex-col gap-4">
-                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
-                    <textarea id="inputText" class="w-full h-full p-8 focus:outline-none resize-none text-sm leading-relaxed" placeholder="在此输入 Markdown..."></textarea>
-                </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 items-start mt-4">
+            
+            <div class="bg-white rounded-[28px] shadow-sm border border-gray-200">
+                <textarea id="inputText" class="w-full min-h-[70vh] p-8 focus:outline-none resize-none text-sm leading-relaxed overflow-hidden bg-transparent" placeholder="在此输入 Markdown..." oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
             </div>
-            <div class="flex flex-col gap-4">
-                <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 overflow-hidden h-[60vh]">
-                    <div id="previewArea" class="w-full h-full overflow-y-auto p-8 preview-container"></div>
-                </div>
+            
+            <div class="bg-white rounded-[28px] shadow-sm border border-gray-200 min-h-[70vh]">
+                <div id="previewArea" class="w-full h-full p-8 preview-container"></div>
             </div>
+
         </div>
     </div>
 
@@ -306,10 +305,17 @@
 
         function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
+        // ================= 这里加入了空内容的提示拦截 =================
         async function handleConvert() {
             const text = document.getElementById('inputText').value;
+            
+            // 检查内容是否为空
+            if(!text.trim()) {
+                alert("请输入需要转换的 Markdown 内容哦！");
+                return;
+            }
+            
             const theme = document.getElementById('themeSelect').value;
-            if(!text) return;
             const res = await fetch('/api/convert', { method: 'POST', body: JSON.stringify({ text, theme }) });
             const data = await res.json();
             if (data.title) document.getElementById('articleTitle').value = data.title;
