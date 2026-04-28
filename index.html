@@ -50,7 +50,10 @@
     <div id="mainApp" class="cloak max-w-[1200px] mx-auto px-6 py-6 relative">
         
         <header class="text-center py-6">
-            <h1 class="text-3xl font-bold tracking-tight mb-4">发布精灵</h1>
+            <h1 class="text-3xl font-bold tracking-tight mb-4 flex items-center justify-center gap-3">
+                发布精灵
+                <a href="https://www.cloudflare-cn.com/ips/" target="_blank" class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full hover:bg-blue-100 hover:text-blue-600 transition" title="配置 Cloudflare IP 白名单">IP 配置</a>
+            </h1>
             <nav class="flex justify-center gap-8 mb-6 border-b border-gray-200/50 pb-2">
                 <button onclick="switchTab('edit')" id="tabEdit" class="nav-active text-sm pb-2 transition-all">创作中心</button>
                 <button onclick="switchTab('automate')" id="tabAutomate" class="text-gray-400 text-sm pb-2 hover:text-gray-600 transition-all">自动化文章</button>
@@ -121,7 +124,7 @@
                         </div>
                         <input type="file" id="coverFileInput" accept="image/*" class="hidden">
                         <button onclick="document.getElementById('coverFileInput').click()" class="text-xs font-medium px-2 py-1.5 hover:bg-gray-100 rounded-lg transition">选择封面</button>
-                        <button onclick="handleCoverUpload()" class="bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-800 transition">固化默认</button>
+                        <button id="coverUploadBtn" onclick="handleCoverUpload()" class="bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-800 transition">固化默认</button>
                     </div>
                     <div class="flex gap-2 shrink-0">
                         <button onclick="handleConvert()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">转换预览</button>
@@ -158,24 +161,26 @@
         let currentDigest = "";
         let isSetupMode = false;
 
-        // --- 核心更新：标签切换逻辑 ---
         function switchTab(tab) {
             const editBtn = document.getElementById('tabEdit');
             const autoBtn = document.getElementById('tabAutomate');
             const autoWork = document.getElementById('automateWorkarea');
+            const uploadBtn = document.getElementById('coverUploadBtn');
             
             if (tab === 'automate') {
                 autoBtn.className = 'nav-active text-sm pb-2 transition-all';
                 editBtn.className = 'text-gray-400 text-sm pb-2 hover:text-gray-600 transition-all';
                 autoWork.classList.remove('cloak');
+                uploadBtn.innerText = "上传单次封面"; // 动态修改为单次逻辑
             } else {
                 editBtn.className = 'nav-active text-sm pb-2 transition-all';
                 autoBtn.className = 'text-gray-400 text-sm pb-2 hover:text-gray-600 transition-all';
                 autoWork.classList.add('cloak');
+                uploadBtn.innerText = "固化默认"; // 恢复固化逻辑
             }
         }
 
-        // --- 核心更新：自动化流程逻辑 ---
+        // --- 核心修复：自动化 JSON 流式解析逻辑 ---
         async function runAIWorkflow() {
             const topic = document.getElementById('aiTopic').value;
             const persona = document.getElementById('aiPersona').value;
@@ -205,23 +210,43 @@
                     body: JSON.stringify({ topic, persona })
                 });
                 
-                // 模拟流式处理反馈（如果后端支持流式，此处可优化为 Reader）
-                const data = await res.json();
-                
-                if (data.markdown) {
-                    logMsg(3, "正在进行全文润色与结构优化...", 60);
-                    logMsg(4, "提取摘要与 SEO 关键词...", 80);
+                // 修复点：使用标准的流式拆行读取 (NDJSON 解析)
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let finalMarkdown = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    // 后端现在会加上 \n，前端通过 \n 劈开每个 JSON 块
+                    const lines = chunk.split('\n').filter(line => line.trim());
                     
-                    document.getElementById('inputText').value = data.markdown;
+                    for (const line of lines) {
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.step) logMsg(data.step, data.message, data.step * 20);
+                            if (data.markdown) finalMarkdown = data.markdown;
+                            if (data.error) throw new Error(data.error);
+                        } catch (e) {
+                            console.warn("JSON片段解析跳过: ", line);
+                        }
+                    }
+                }
+
+                if (finalMarkdown) {
+                    document.getElementById('inputText').value = finalMarkdown;
                     autoResizeTextarea();
                     
-                    // 自动化文章封面的单次逻辑：清除固化的 ID 状态
+                    // 重置清理固化ID逻辑
                     localStorage.removeItem("fixed_thumb_media_id");
                     document.getElementById('coverPreviewContainer').classList.add('cloak');
                     
                     await handleConvert(); 
-                    logMsg(5, "流程执行完毕，内容已就绪！", 100);
-                } else { throw new Error(data.error || "生成失败"); }
+                    logMsg(5, "流程执行完毕，内容已就绪！可以为其上传一张单次封面了", 100);
+                } else {
+                    throw new Error("生成失败，未能获取到文章内容");
+                }
 
             } catch (e) {
                 log.innerHTML += `<div class="text-red-500 mt-1">✘ 错误: ${e.message}</div>`;
@@ -230,15 +255,11 @@
             }
         }
 
-        // --- 核心更新：转换拦截并自动追加文末提示 ---
         async function handleConvert() {
             let text = document.getElementById('inputText').value;
             if(!text.trim()) return alert("请输入需要转换的 Markdown 内容哦！");
 
-            // 自动追加星标提醒和图片
             const footer = `\n\n---\n\n**tips**：敬爱的读者朋友，由于微信的推送规则，即使您关注了我们，可能也常常收不到推送，记得点击“硅基旁观”名片，设为星标⭐️，文章每天会自动推送哦！\n\n![硅基旁观](https://file.jiahaolikeyou.de5.net/file/AgACAgUAAyEGAATfnNWfAAO1afBhD2hOLy8Hp3tvsSIwpAABI-FdAAKXEmsbRGiIV_ZDiOD4z14WAQADAgADdwADOwQ.png)`;
-            
-            // 发送给后端的 text 包含追加的内容
             const payloadText = text.includes("硅基旁观") ? text : text + footer;
 
             const theme = document.getElementById('themeSelect').value;
@@ -262,7 +283,6 @@
             document.getElementById('uploadBtn').disabled = false;
         }
 
-        // --- 原有逻辑 (高度自适应, 图片粘贴, Auth, Cover 等) ---
         const textarea = document.getElementById('inputText');
         function autoResizeTextarea() {
             textarea.style.height = 'auto';
@@ -337,15 +357,47 @@
 
         function changeCover() { updateCoverPreview(document.getElementById('coverSelect').value); }
         function updateCoverPreview(id) { localStorage.setItem("fixed_thumb_media_id", id); document.getElementById('coverPreviewImg').src = `/api/cover_image?id=${id}&t=${Date.now()}`; }
+        
+        // --- 核心修复：封面长久固化与单次使用的隔离逻辑 ---
         async function handleCoverUpload() {
             const file = document.getElementById('coverFileInput').files[0];
             if (!file) return alert("请先选择图片");
+            
+            // 判断当前在哪个标签页下
+            const isAutomate = !document.getElementById('automateWorkarea').classList.contains('cloak');
+            // 如果在自动化标签下，我们在接口请求中带上 single=true 阻止写入 KV
+            const url = isAutomate ? '/api/upload_cover?single=true' : '/api/upload_cover';
+
             document.getElementById('uploadOverlay').classList.remove('cloak');
-            document.getElementById('uploadStatusText').innerText = "固化封面中...";
-            const formData = new FormData(); formData.append('file', file);
-            const xhr = new XMLHttpRequest(); xhr.open('POST', '/api/upload_cover', true);
-            xhr.upload.onprogress = (e) => { if (e.lengthComputable) updateProgress(Math.round((e.loaded / e.total) * 100)); };
-            xhr.onload = async () => { if (xhr.status === 200) { alert("固化成功"); await initSystem(); } document.getElementById('uploadOverlay').classList.add('cloak'); };
+            document.getElementById('uploadStatusText').innerText = isAutomate ? "上传单次封面中..." : "固化封面中...";
+            
+            const formData = new FormData(); 
+            formData.append('file', file);
+            const xhr = new XMLHttpRequest(); 
+            xhr.open('POST', url, true);
+            
+            xhr.upload.onprogress = (e) => { 
+                if (e.lengthComputable) updateProgress(Math.round((e.loaded / e.total) * 100)); 
+            };
+            
+            xhr.onload = async () => { 
+                if (xhr.status === 200) { 
+                    const result = JSON.parse(xhr.responseText);
+                    if(result.success) {
+                        if(isAutomate) {
+                            // 单次逻辑：把拿到的 media_id 写到本地，同步草稿时会用，但 KV 没有这图的记录
+                            localStorage.setItem("fixed_thumb_media_id", result.media_id);
+                            alert("单次封面上传成功！此图仅为本次发布生效。");
+                        } else {
+                            alert("固化成功"); 
+                            await initSystem(); // 刷新封面列表
+                        }
+                    } else {
+                        alert("上传失败: " + result.error);
+                    }
+                } 
+                document.getElementById('uploadOverlay').classList.add('cloak'); 
+            };
             xhr.send(formData);
         }
 
