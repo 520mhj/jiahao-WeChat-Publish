@@ -1,7 +1,12 @@
+// 文件路径：functions/api/upload_cover.js
 export async function onRequestPost(context) {
     const { env, request } = context;
     const APP_ID = env.WECHAT_APP_ID;
     const APP_SECRET = env.WECHAT_APP_SECRET;
+    
+    // 获取 URL 中的 ?single=true 参数标志
+    const url = new URL(request.url);
+    const isSingleUse = url.searchParams.get('single') === 'true';
 
     try {
         const tokenRes = await fetch(`https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${APP_ID}&secret=${APP_SECRET}`);
@@ -14,6 +19,7 @@ export async function onRequestPost(context) {
         const wxFormData = new FormData();
         wxFormData.append('media', file);
 
+        // 调用微信 API 获取 media_id
         const uploadRes = await fetch(`https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${tokenData.access_token}&type=thumb`, {
             method: 'POST',
             body: wxFormData
@@ -23,25 +29,26 @@ export async function onRequestPost(context) {
         if (uploadData.media_id) {
             const mediaId = uploadData.media_id;
             
-            // 1. 存入当前选中状态
-            await env.WECHAT_KV.put('COVER_MEDIA_ID', mediaId);
-            
-            // 2. 独立存储图片数据（Key 包含 ID）
-            const arrayBuffer = await file.arrayBuffer();
-            await env.WECHAT_KV.put(`COVER_IMAGE_DATA_${mediaId}`, arrayBuffer, {
-                metadata: { type: file.type || 'image/jpeg' }
-            });
+            // 如果不是“单次使用”，才去触发全套的 KV 固化流程
+            if (!isSingleUse) {
+                await env.WECHAT_KV.put('COVER_MEDIA_ID', mediaId);
+                
+                const arrayBuffer = await file.arrayBuffer();
+                await env.WECHAT_KV.put(`COVER_IMAGE_DATA_${mediaId}`, arrayBuffer, {
+                    metadata: { type: file.type || 'image/jpeg' }
+                });
 
-            // 3. 更新封面列表索引
-            let list = [];
-            const listStr = await env.WECHAT_KV.get('COVER_LIST');
-            if (listStr) { list = JSON.parse(listStr); }
-            
-            if (!list.find(item => item.id === mediaId)) {
-                list.push({ id: mediaId, name: file.name || `封面_${Date.now()}` });
-                await env.WECHAT_KV.put('COVER_LIST', JSON.stringify(list));
+                let list = [];
+                const listStr = await env.WECHAT_KV.get('COVER_LIST');
+                if (listStr) { list = JSON.parse(listStr); }
+                
+                if (!list.find(item => item.id === mediaId)) {
+                    list.push({ id: mediaId, name: file.name || `封面_${Date.now()}` });
+                    await env.WECHAT_KV.put('COVER_LIST', JSON.stringify(list));
+                }
             }
 
+            // 单次与固化都会把拿到的 ID 丢给前端，但对单次使用，KV 里就像什么都没发生过一样
             return new Response(JSON.stringify({ success: true, media_id: mediaId }));
         }
         return new Response(JSON.stringify({ success: false, error: uploadData.errmsg }), { status: 400 });
