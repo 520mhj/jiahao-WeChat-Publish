@@ -15,62 +15,60 @@ export async function onRequestPost(context) {
     const writer = stream.writable.getWriter();
 
     const sendStep = async (step, message, markdown = null) => {
+        // 使用 \n 分隔每个 JSON 对象，确保前端解析不报错
         await writer.write(encoder.encode(JSON.stringify({ step, message, markdown }) + '\n'));
     };
 
     (async () => {
         try {
-            // 步骤 1：选题与丰富题材
+            // 1. 选题
             let finalTopic = topic;
             if (!topic) {
-                await sendStep(1, "捕捉灵感：抓取今日科技热点中...");
+                await sendStep(1, "正在抓取今日热点并构思选题...");
                 const trendRes = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
                     messages: [{ role: "user", content: "列出 3 个当下最火的科技或互联网话题，简洁描述" }]
                 });
                 finalTopic = trendRes.response;
             }
 
-            // 步骤 2：生成精细大纲 (关键：防止模型“迷路”)
-            await sendStep(2, "逻辑构思：正在设计文章深度大纲...");
+            // 2. 生成详细大纲
+            await sendStep(2, "正在构思深度大纲 (分段规划中)...");
             const outlineRes = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
                 messages: [
                     { role: "system", content: PERSONAS[persona] },
-                    { role: "user", content: `针对题材《${finalTopic}》，规划一份详细的 Markdown 大纲。要求包含：1个一级标题，4个二级标题，并注明每个部分的写作重点。` }
-                ],
-                max_tokens: 1000 
+                    { role: "user", content: `针对题材《${finalTopic}》，规划一份包含 4 个章节的详细 Markdown 大纲。只需要输出标题列表。` }
+                ]
             });
             const outline = outlineRes.response;
 
-            // 步骤 3：全文扩写 (调高 max_tokens)
-            await sendStep(3, "内容生产：AI 正在进行深度写作与润色 (约需 15-25 秒)...");
-            
-            const writingPrompt = `你现在正在为公众号“纸页虾”创作。
-            参考大纲：
-            ${outline}
-
-            请根据上述大纲，撰写出一篇逻辑严密、细节丰富的深度长文。
-            要求：
-            1. 风格遵循：${PERSONAS[persona]}。
-            2. 必须包含一段以 '虾选金句' 开头的引用块（使用 > 符号）。
-            3. 字数要求：尽量丰富，不少于 1500 字。
-            4. 输出格式：纯 Markdown。`;
-
-            // 核心修改：手动指定较高的 max_tokens，并使用更稳定的指令
-            const articleRes = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
+            // 3. 撰写上半部分 (解决超时关键步)
+            await sendStep(3, "内容生产：正在撰写文章上半部分...");
+            const part1Res = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
                 messages: [
                     { role: "system", content: PERSONAS[persona] },
-                    { role: "user", content: writingPrompt }
+                    { role: "user", content: `参考大纲：\n${outline}\n\n请撰写文章的前两个章节。要求：Markdown格式，包含吸引人的1级标题。不要写结论。` }
                 ],
-                max_tokens: 3500 // 调高单次生成上限
+                max_tokens: 1800 
             });
+            const part1 = part1Res.response;
 
-            // 步骤 4：SEO 与摘要提取
-            await sendStep(4, "产品打磨：正在提取摘要并优化 SEO 关键词...");
-            
-            // 步骤 5：完成
-            await sendStep(5, "完成", articleRes.response);
+            // 4. 撰写下半部分与总结
+            await sendStep(4, "内容生产：正在撰写下半部分并润色全文...");
+            const part2Res = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
+                messages: [
+                    { role: "system", content: PERSONAS[persona] },
+                    { role: "user", content: `这是文章的前半部分：\n${part1}\n\n请继续写完剩下的章节。要求：衔接自然，包含一段以 '虾选金句' 开头的引用块(> 符号)，并给出深度总结。直接输出后续内容。` }
+                ],
+                max_tokens: 1800
+            });
+            const part2 = part2Res.response;
+
+            // 5. 合并并提取 SEO
+            const fullMarkdown = part1 + "\n\n" + part2;
+            await sendStep(5, "流程执行完毕，内容已就绪！", fullMarkdown);
+
         } catch (err) {
-            await writer.write(encoder.encode(JSON.stringify({ error: `生成中断：${err.message}` }) + '\n'));
+            await writer.write(encoder.encode(JSON.stringify({ error: `AI 写作中断：${err.message}` }) + '\n'));
         } finally {
             await writer.close();
         }
