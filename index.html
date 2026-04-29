@@ -193,7 +193,7 @@ async function runAIWorkflow() {
     btn.disabled = true;
     progress.classList.remove('cloak');
     log.innerHTML = "";
-    inputArea.value = ""; 
+    inputArea.value = ""; // 清空左侧
 
     const logMsg = (step, msg, pct) => {
         label.innerText = msg;
@@ -204,7 +204,7 @@ async function runAIWorkflow() {
     };
 
     try {
-        logMsg(1, "正在连接免费 AI 引擎...", 30);
+        logMsg(1, "正在连接 NVIDIA 算力集群...", 30);
         
         const res = await fetch('/api/automate', {
             method: 'POST',
@@ -212,58 +212,42 @@ async function runAIWorkflow() {
             body: JSON.stringify({ topic, persona })
         });
 
-        // 如果 CF 服务器拒绝（比如 token 超限），直接把报错原因印出来
         if (!res.ok) {
             const errText = await res.text();
             throw new Error(`请求被拦截 (${res.status}): ${errText}`);
         }
 
-        logMsg(2, "AI 正在实时撰写文章，请在左侧观看...", 60);
+        logMsg(2, "AI 正在全速撰写，直接输出至左侧...", 60);
 
+        // 【最暴力的读取方式】直接读纯文字，抛弃一切 JSON 解析
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        let buffer = "";
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            buffer += decoder.decode(value, { stream: true });
-            let lines = buffer.split('\n');
-            buffer = lines.pop(); // 保留最后一行未完整的 JSON 片段
-            
-            for (let line of lines) {
-                line = line.trim();
-                if (line.startsWith('data:')) {
-                    let payload = line.substring(5).trim();
-                    if (payload === '[DONE]') continue;
-                    try {
-                        let parsed = JSON.parse(payload);
-                        if (parsed.response) {
-                            inputArea.value += parsed.response;
-                            inputArea.scrollTop = inputArea.scrollHeight;
-                        }
-                    } catch (e) {
-                        // 忽略偶发的 JSON 解析碎片
-                    }
-                }
+            const chunk = decoder.decode(value, { stream: true });
+            if (chunk) {
+                // 收到一个字，就塞进左侧文本框一个字
+                inputArea.value += chunk;
+                inputArea.scrollTop = inputArea.scrollHeight;
             }
         }
 
         autoResizeTextarea();
         
         if (inputArea.value.trim().length === 0) {
-            throw new Error("模型响应为空，请稍后再试。");
+            throw new Error("模型响应为空，请检查 NVIDIA_API_KEY 是否正确配置。");
         }
 
         logMsg(3, "撰写完成！正在自动排版...", 100);
         
-        // 自动化文章单次封面逻辑
         localStorage.removeItem("fixed_thumb_media_id");
         document.getElementById('coverPreviewContainer').classList.add('cloak');
         
         await handleConvert(); 
-        alert("自动化写作已完美完成，请预览效果！");
+        alert("NVIDIA 引擎写作已完成，请在右侧预览效果！");
 
     } catch (e) {
         log.innerHTML += `<div class="text-red-500 mt-1">✘ 错误: ${e.message}</div>`;
