@@ -193,7 +193,7 @@ async function runAIWorkflow() {
     btn.disabled = true;
     progress.classList.remove('cloak');
     log.innerHTML = "";
-    inputArea.value = ""; // 清空编辑器，准备接收流
+    inputArea.value = ""; // 清空编辑器，准备接收纯文本流
 
     const logMsg = (step, msg, pct) => {
         label.innerText = msg;
@@ -212,55 +212,39 @@ async function runAIWorkflow() {
             body: JSON.stringify({ topic, persona })
         });
 
-        if (!res.ok) throw new Error("API 请求失败");
+        if (!res.ok) throw new Error("API 请求失败状态码: " + res.status);
 
         logMsg(2, "AI 正在实时撰写文章，请在左侧观看...", 60);
 
-        // 核心修复：解析原生的 Server-Sent Events 流
+        // 终极修复：直接读取纯文本，不再进行复杂的 JSON 解析
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        let buffer = '';
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            buffer += decoder.decode(value, { stream: true });
-            let parts = buffer.split('\n');
-            buffer = parts.pop(); // 保留最后一行未完整的片段到下一次循环
-            
-            for (const line of parts) {
-                if (line.startsWith('data: ')) {
-                    const dataStr = line.slice(6).trim();
-                    if (dataStr === '[DONE]') continue;
-                    try {
-                        const data = JSON.parse(dataStr);
-                        if (data.response) {
-                            inputArea.value += data.response;
-                            // 让滚动条跟随最新生成的文字
-                            inputArea.scrollTop = inputArea.scrollHeight;
-                        }
-                    } catch (e) {
-                        // 忽略偶发的 JSON 解析异常片段
-                    }
-                }
+            const textChunk = decoder.decode(value, { stream: true });
+            if (textChunk) {
+                // 收到什么就往框里塞什么
+                inputArea.value += textChunk;
+                // 滚动条自动跟随打字机效果
+                inputArea.scrollTop = inputArea.scrollHeight;
             }
         }
 
-        // 生成结束后，手动触发自适应高度并转换预览
         autoResizeTextarea();
         logMsg(3, "撰写完成！正在自动排版...", 100);
         
-        // 自动化文章单次封面逻辑
         localStorage.removeItem("fixed_thumb_media_id");
         document.getElementById('coverPreviewContainer').classList.add('cloak');
         
         await handleConvert(); 
-        alert("自动化写作已完美完成，内容已排版完毕！");
+        alert("自动化写作已完成，请预览效果！");
 
     } catch (e) {
         log.innerHTML += `<div class="text-red-500 mt-1">✘ 错误: ${e.message}</div>`;
-        alert("生成出现异常。如果文章没有写完，可以直接在编辑器里继续补充。");
+        alert("生成出现异常。如果在左侧看到了部分文章，可以直接补充修改。");
     } finally {
         btn.disabled = false;
     }
