@@ -1,4 +1,3 @@
-// 文件路径：functions/api/automate.js
 export async function onRequestPost(context) {
     const { env, request } = context;
     const { topic, persona } = await request.json();
@@ -10,71 +9,39 @@ export async function onRequestPost(context) {
         critic: "你是一个犀利的评论员，擅长使用归谬法和辩证批评，挑战常规观点。"
     };
 
-    const encoder = new TextEncoder();
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
+    let finalTopic = topic || "今日最新科技或互联网热点";
 
-    const sendStep = async (step, message, markdown = null) => {
-        // 使用 \n 分隔每个 JSON 对象，确保前端解析不报错
-        await writer.write(encoder.encode(JSON.stringify({ step, message, markdown }) + '\n'));
-    };
+    const writingPrompt = `基于以下题材：${finalTopic}。
+请撰写一篇逻辑严密、细节丰富的深度长文。
+要求：
+1. 风格遵循：${PERSONAS[persona]}。
+2. 必须包含一个极具吸引力的“爆款”1级标题，以及多个 2 级标题，吸引读者点击。
+3. 必须包含一段以 '虾选金句' 开头的引用块（使用 > 符号）。
+4. 尽可能详细展开，字数越丰富越好。
+5. 请直接输出 Markdown 正文，不要包含任何多余的开场白或解释。`;
 
-    (async () => {
-        try {
-            // 1. 选题
-            let finalTopic = topic;
-            if (!topic) {
-                await sendStep(1, "正在抓取今日热点并构思选题...");
-                const trendRes = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
-                    messages: [{ role: "user", content: "列出 3 个当下最火的科技或互联网话题，简洁描述" }]
-                });
-                finalTopic = trendRes.response;
+    const messages = [
+        { role: "system", content: "你是一个专业的微信公众号爆款文章写手。" },
+        { role: "user", content: writingPrompt }
+    ];
+
+    try {
+        // 使用原生官方流式生成，开启 stream: true
+        const stream = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
+            messages,
+            stream: true,
+            max_tokens: 4000 // 调高 token 确保长文不截断
+        });
+
+        // 原生返回 Server-Sent Events 流
+        return new Response(stream, {
+            headers: { 
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
             }
-
-            // 2. 生成详细大纲
-            await sendStep(2, "正在构思深度大纲 (分段规划中)...");
-            const outlineRes = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
-                messages: [
-                    { role: "system", content: PERSONAS[persona] },
-                    { role: "user", content: `针对题材《${finalTopic}》，规划一份包含 4 个章节的详细 Markdown 大纲。只需要输出标题列表。` }
-                ]
-            });
-            const outline = outlineRes.response;
-
-            // 3. 撰写上半部分 (解决超时关键步)
-            await sendStep(3, "内容生产：正在撰写文章上半部分...");
-            const part1Res = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
-                messages: [
-                    { role: "system", content: PERSONAS[persona] },
-                    { role: "user", content: `参考大纲：\n${outline}\n\n请撰写文章的前两个章节。要求：Markdown格式，包含吸引人的1级标题。不要写结论。` }
-                ],
-                max_tokens: 1800 
-            });
-            const part1 = part1Res.response;
-
-            // 4. 撰写下半部分与总结
-            await sendStep(4, "内容生产：正在撰写下半部分并润色全文...");
-            const part2Res = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
-                messages: [
-                    { role: "system", content: PERSONAS[persona] },
-                    { role: "user", content: `这是文章的前半部分：\n${part1}\n\n请继续写完剩下的章节。要求：衔接自然，包含一段以 '虾选金句' 开头的引用块(> 符号)，并给出深度总结。直接输出后续内容。` }
-                ],
-                max_tokens: 1800
-            });
-            const part2 = part2Res.response;
-
-            // 5. 合并并提取 SEO
-            const fullMarkdown = part1 + "\n\n" + part2;
-            await sendStep(5, "流程执行完毕，内容已就绪！", fullMarkdown);
-
-        } catch (err) {
-            await writer.write(encoder.encode(JSON.stringify({ error: `AI 写作中断：${err.message}` }) + '\n'));
-        } finally {
-            await writer.close();
-        }
-    })();
-
-    return new Response(stream.readable, {
-        headers: { "Content-Type": "application/x-ndjson" }
-    });
+        });
+    } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    }
 }
