@@ -11,13 +11,14 @@ export async function onRequestPost(context) {
 
     let finalTopic = topic || "今日最新科技或互联网热点";
 
-    const writingPrompt = `请为题材《${finalTopic}》写一篇深度微信公众号长文。
+    const writingPrompt = const writingPrompt = `请为题材《${finalTopic}》写一篇深度微信公众号长文。
 要求：
 1. 风格：${PERSONAS[persona] || PERSONAS.formal}
 2. 包含1个“爆款”一级标题，以及结构清晰的多个二级标题。
-3. 必须包含一段以 '> 虾选金句' 开头的引用块（必须带 > 符号）。
+3. 必须包含一段以 '三级标题 虾选金句' 换行开头的引用块（必须带 > 符号）。
 4. 内容详细丰富，逻辑严密，提供深度的见解。
-5. 【重要指令】请直接输出标准 Markdown 正文，绝对不要输出“好的”、“没问题”、“以下是为您生成的文章”等任何开场白或自我介绍！`;
+5. 【严格语言纪律】全文必须使用纯正的中文（简体）撰写！严禁夹杂任何英文单词或短语（遇到外文专有名词请全部意译为中文，例如将 "cat memes" 译为 "猫咪梗图"，"nationalism" 译为 "民族主义"）。
+6. 【直接输出】请直接输出标准 Markdown 正文，绝对不要输出“好的”、“没问题”等任何开场白或自我介绍！`;
 
     const messages = [
         { role: "system", content: "你是一个专业的微信公众号爆款文章写手。" },
