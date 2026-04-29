@@ -101,7 +101,7 @@
             </div>
         </div>
 
-        <div class="sticky top-0 z-50 pt-2 pb-4 bg-[#f5f5f7]/95 backdrop-blur-xl border-b border-gray-200/50 mb-6">
+        <div class="sticky top-0 z-50 pt-2 pb-4 bg-[#f5f5f7]/95 backdrop-blur-xl border-b border-gray-200/50 mb-6 transform-gpu" style="will-change: transform, backdrop-filter;">
             <div class="apple-glass p-3 md:p-4 rounded-[20px] border border-white shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div class="flex w-full md:w-auto flex-1 gap-3 items-center">
                     <input id="articleTitle" type="text" placeholder="文章标题..." class="flex-1 px-4 py-2.5 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all font-medium text-sm">
@@ -261,7 +261,7 @@ async function runAIWorkflow() {
             let text = document.getElementById('inputText').value;
             if(!text.trim()) return alert("请输入需要转换的 Markdown 内容哦！");
 
-            const footer = `\n\n---\n\n**tips**：敬爱的读者朋友，由于微信的推送规则，即使您关注了我们，可能也常常收不到推送，记得点击“硅基旁观”名片，设为星标⭐️，文章每天会自动推送哦！\n\n![硅基旁观](https://file.jiahaolikeyou.de5.net/file/AgACAgUAAyEGAATfnNWfAAO1afBhD2hOLy8Hp3tvsSIwpAABI-FdAAKXEmsbRGiIV_ZDiOD4z14WAQADAgADdwADOwQ.png)`;
+            const footer = '\n\n---\n\n**tips：**`敬爱的读者朋友，由于微信的推送规则，即使您关注了我们，可能也常常收不到推送，记得点击“硅基旁观”名片，设为星标⭐️，文章每天会自动推送哦！`\n\n![硅基旁观](https://file.jiahaolikeyou.de5.net/file/AgACAgUAAyEGAATfnNWfAAO1afBhD2hOLy8Hp3tvsSIwpAABI-FdAAKXEmsbRGiIV_ZDiOD4z14WAQADAgADdwADOwQ.png)';
             const payloadText = text.includes("硅基旁观") ? text : text + footer;
 
             const theme = document.getElementById('themeSelect').value;
@@ -285,11 +285,14 @@ async function runAIWorkflow() {
             document.getElementById('uploadBtn').disabled = false;
         }
 
-        const textarea = document.getElementById('inputText');
-        function autoResizeTextarea() {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
+const textarea = document.getElementById('inputText');
+function autoResizeTextarea() {
+    window.requestAnimationFrame(() => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    });
+}
+textarea.addEventListener('input', autoResizeTextarea);
         textarea.addEventListener('input', autoResizeTextarea);
 
         document.addEventListener("DOMContentLoaded", async () => {
@@ -312,11 +315,25 @@ async function runAIWorkflow() {
                     setTimeout(autoResizeTextarea, 50);
                 });
             }
-            window.addEventListener('scroll', () => {
-                const btn = document.getElementById('backToTopBtn');
-                if (window.scrollY > 300) { btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8'); btn.classList.add('opacity-100', 'translate-y-0'); }
-                else { btn.classList.remove('opacity-100', 'translate-y-0'); btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8'); }
-            });
+// 性能优化：使用状态锁避免重复操作 DOM，并开启 passive 提升滚动帧率
+let btnVisible = false;
+window.addEventListener('scroll', () => {
+    // requestAnimationFrame 确保在浏览器下一次重绘时执行，极其顺滑
+    window.requestAnimationFrame(() => {
+        const shouldShow = window.scrollY > 300;
+        if (shouldShow !== btnVisible) {
+            const btn = document.getElementById('backToTopBtn');
+            if (shouldShow) {
+                btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
+                btn.classList.add('opacity-100', 'translate-y-0');
+            } else {
+                btn.classList.remove('opacity-100', 'translate-y-0');
+                btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8');
+            }
+            btnVisible = shouldShow; // 更新状态锁
+        }
+    });
+}, { passive: true }); // passive: true 是解决滚动卡顿的终极杀器
         });
 
         async function uploadAndInsertImage(file) {
