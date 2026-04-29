@@ -11,7 +11,7 @@ export async function onRequestPost(context) {
 
     let finalTopic = topic || "今日最新科技或互联网热点";
 
-    const writingPrompt = const writingPrompt = `请为题材《${finalTopic}》写一篇深度微信公众号长文。
+    const writingPrompt = `请为题材《${finalTopic}》写一篇深度微信公众号长文。
 要求：
 1. 风格：${PERSONAS[persona] || PERSONAS.formal}
 2. 包含1个“爆款”一级标题，以及结构清晰的多个二级标题。
