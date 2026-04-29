@@ -25,23 +25,77 @@ export async function onRequestPost(context) {
         { role: "user", content: writingPrompt }
     ];
 
-    try {
-        // 使用原生官方流式生成，开启 stream: true
-        const stream = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
-            messages,
-            stream: true,
-            max_tokens: 4000 // 调高 token 确保长文不截断
-        });
+    // 创建一个极其纯净的文本流管道传给前端
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
 
-        // 原生返回 Server-Sent Events 流
-        return new Response(stream, {
-            headers: { 
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive"
+    // 异步处理 AI 请求
+    (async () => {
+        try {
+            const response = await env.AI.run("@hf/nousresearch/hermes-2-pro-mistral-7b", {
+                messages,
+                stream: true,
+                max_tokens: 2500 // 调低 Token 以免触发模型的长度上限报错
+            });
+
+            if (response instanceof ReadableStream) {
+                const reader = response.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    let parts = buffer.split('\n');
+                    buffer = parts.pop(); // 保留最后不完整的部分
+                    
+                    for (const line of parts) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('data:')) {
+                            const dataStr = trimmed.slice(5).trim();
+                            if (dataStr === '[DONE]') continue;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                // 提取到有效文字后，直接以纯文本写入流中
+                                if (data.response) {
+                                    await writer.write(encoder.encode(data.response));
+                                }
+                                if (data.error) {
+                                    await writer.write(encoder.encode(`\n\n[API 报错: ${data.error}]`));
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+                // 处理末尾残留
+                if (buffer.includes('response')) {
+                    try { 
+                        const data = JSON.parse(buffer.replace('data:', '').trim());
+                        if(data.response) await writer.write(encoder.encode(data.response));
+                    } catch(e) {}
+                }
+            } else if (response && response.response) {
+                // 模型降级为非流式时的安全兜底
+                await writer.write(encoder.encode(response.response));
+            } else {
+                await writer.write(encoder.encode("AI 未返回预期内容，请重试。"));
             }
-        });
-    } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-    }
+        } catch (err) {
+            await writer.write(encoder.encode(`\n\n[生成错误：${err.message}]`));
+        } finally {
+            await writer.close();
+        }
+    })();
+
+    // 告诉前端：这是最干净的纯文本，直接往框里塞就行
+    return new Response(readable, {
+        headers: { 
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
+    });
 }
