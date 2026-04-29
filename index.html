@@ -193,7 +193,7 @@ async function runAIWorkflow() {
     btn.disabled = true;
     progress.classList.remove('cloak');
     log.innerHTML = "";
-    inputArea.value = ""; // 清空编辑器，准备接收纯文本流
+    inputArea.value = ""; 
 
     const logMsg = (step, msg, pct) => {
         label.innerText = msg;
@@ -204,7 +204,7 @@ async function runAIWorkflow() {
     };
 
     try {
-        logMsg(1, "正在初始化模型与提示词...", 30);
+        logMsg(1, "正在连接 AI 引擎与分发提示词...", 30);
         
         const res = await fetch('/api/automate', {
             method: 'POST',
@@ -212,39 +212,85 @@ async function runAIWorkflow() {
             body: JSON.stringify({ topic, persona })
         });
 
-        if (!res.ok) throw new Error("API 请求失败状态码: " + res.status);
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`API 请求失败 (${res.status}): ${errText}`);
+        }
 
-        logMsg(2, "AI 正在实时撰写文章，请在左侧观看...", 60);
+        logMsg(2, "AI 正在实时撰写文章，请耐心等待...", 60);
 
-        // 终极修复：直接读取纯文本，不再进行复杂的 JSON 解析
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let isRawJSON = false;
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            const textChunk = decoder.decode(value, { stream: true });
-            if (textChunk) {
-                // 收到什么就往框里塞什么
-                inputArea.value += textChunk;
-                // 滚动条自动跟随打字机效果
-                inputArea.scrollTop = inputArea.scrollHeight;
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            
+            // 初步判断：如果开头是个括号且没有 data:，说明模型降级为一次性返回了
+            if (!isRawJSON && buffer.trim().startsWith('{') && !buffer.includes('data:')) {
+                isRawJSON = true;
+            }
+
+            if (!isRawJSON) {
+                // 标准的流式 (SSE) 解析
+                let lines = buffer.split('\n');
+                buffer = lines.pop(); // 把最后一行不完整的塞回 buffer 等待下次补齐
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line.startsWith('data:')) {
+                        let payload = line.substring(5).trim();
+                        if (payload === '[DONE]') continue;
+                        try {
+                            let parsed = JSON.parse(payload);
+                            if (parsed.response) {
+                                inputArea.value += parsed.response;
+                                inputArea.scrollTop = inputArea.scrollHeight;
+                            }
+                        } catch (e) {
+                            // 忽略被意外截断的 JSON 碎片
+                        }
+                    }
+                }
+            }
+        }
+
+        // 兜底处理：如果后端返回的是一次性 JSON 甚至纯文本报错
+        if (isRawJSON) {
+            try {
+                let parsed = JSON.parse(buffer);
+                if (parsed.response) inputArea.value = parsed.response;
+                else if (parsed.error) throw new Error(parsed.error);
+            } catch(e) {
+                inputArea.value = buffer; // 解析彻底失败时，把乱码印在框里方便我们看死因
             }
         }
 
         autoResizeTextarea();
+        
+        // 核心拦截：如果输入框依然是空的，强行终止并抛出异常，不再执行后续弹窗
+        if (inputArea.value.trim().length === 0) {
+            throw new Error("AI 未能返回任何有效文字，请稍微修改题材后重试。");
+        }
+
         logMsg(3, "撰写完成！正在自动排版...", 100);
         
+        // 清理单次封面缓存
         localStorage.removeItem("fixed_thumb_media_id");
         document.getElementById('coverPreviewContainer').classList.add('cloak');
         
+        // 触发排版预览
         await handleConvert(); 
-        alert("自动化写作已完成，请预览效果！");
+        alert("自动化写作已完美完成，请在右侧预览效果！");
 
     } catch (e) {
         log.innerHTML += `<div class="text-red-500 mt-1">✘ 错误: ${e.message}</div>`;
-        alert("生成出现异常。如果在左侧看到了部分文章，可以直接补充修改。");
+        alert(e.message);
     } finally {
         btn.disabled = false;
     }
